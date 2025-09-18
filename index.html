@@ -51,18 +51,17 @@ index.html
     .square.in-checkmate{ box-shadow: inset 0 0 0 8px var(--red-checkmate); filter:brightness(0.95); }
 
    
-    //* ✅ CÓDIGO NOVO (COM CONTORNO) */
-.white-piece{ 
-    color: #FFFFFF; /* Peças de baixo agora são brancas */
-    /* Adiciona um contorno preto de 1px e mantém a sombra original */
-    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 2px 2px rgba(0,0,0,0.5); 
-    font-size:36px; 
-}
-.black-piece{ 
-    color: #000000; /* Peças de cima agora são pretas */
-    text-shadow: 0 1px 1px rgba(255,255,255,0.1); 
-    font-size:36px; 
-}
+    * ✅ ALTERAÇÃO AQUI: Cores explícitas para as peças brancas e pretas */
+    .white-piece{ 
+        color: #FFFFFF; /* Peças de baixo agora são brancas */
+        text-shadow: 0 2px 2px rgba(0,0,0,0.5); 
+        font-size:36px; 
+    }
+    .black-piece{ 
+        color: #000000; /* Peças de cima agora são pretas */
+        text-shadow: 0 1px 1px rgba(255,255,255,0.1); 
+        font-size:36px; 
+    }
 
     /* botões e modal */
     .controls{display:flex;gap:12px;align-items:center}
