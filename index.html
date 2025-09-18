@@ -436,7 +436,8 @@ for (const key in SVGs) {
         const color = isWhiteTurn ? 'white' : 'black';
         promotionModal.querySelectorAll('.promotion-choice').forEach(choice => {
             const pieceType = choice.dataset.piece;
-            choice.innerText = PIECES[`${color}_${pieceType}`].symbol;
+            choice.innerHTML = PIECES[`${color}_${pieceType}`].svg;
+
             const handler = () => {
                 boardState[row][col] = `${color}_${pieceType}`;
                 promotionModal.classList.add('hidden');
