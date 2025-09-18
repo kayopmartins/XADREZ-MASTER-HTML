@@ -51,9 +51,16 @@ index.html
     .square.in-checkmate{ box-shadow: inset 0 0 0 8px var(--red-checkmate); filter:brightness(0.95); }
 
     /* peça branca e preta estilo leve */
-    .white-piece svg { 
+    /* Peças brancas */
+.white-piece svg { 
     filter: drop-shadow(0 2px 2px rgba(0,0,0,0.4));
-    .black-piece{ text-shadow: 0 2px 1px rgba(255,255,255,0.03); font-size:36px; }
+}
+
+/* Peças pretas */
+.black-piece svg { 
+    filter: drop-shadow(0 1px 1px rgba(255,255,255,0.1));
+}
+
 
     /* botões e modal */
     .controls{display:flex;gap:12px;align-items:center}
