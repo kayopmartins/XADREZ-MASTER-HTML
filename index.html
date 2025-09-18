@@ -189,7 +189,8 @@ for (const key in SVGs) {
                     const piece = PIECES[pieceName];
                     const pieceElement = document.createElement('span');
                     pieceElement.classList.add('piece', piece.color === 'white' ? 'white-piece' : 'black-piece');
-                    pieceElement.innerText = piece.symbol;
+                   pieceElement.innerHTML = piece.svg; // ✅ insere o SVG estilizado
+
                     if (piece.color === (isWhiteTurn ? 'white' : 'black') && !isGameOver) {
                         pieceElement.draggable = true;
                     }
