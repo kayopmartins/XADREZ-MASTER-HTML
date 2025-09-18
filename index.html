@@ -162,37 +162,41 @@ for (const key in SVGs) {
     }
     
     function renderBoard() {
-        boardElement.innerHTML = '';
-        const kingInCheckPos = !isGameOver ? isKingInCheck(isWhiteTurn ? 'white' : 'black', boardState) : null;
+  boardElement.innerHTML = '';
+  const kingInCheckPos = !isGameOver ? isKingInCheck(isWhiteTurn ? 'white' : 'black', boardState) : null;
 
-        boardState.forEach((row, r) => {
-            row.forEach((pieceName, c) => {
-                const square = document.createElement('div');
-                square.classList.add('square', (r + c) % 2 === 0 ? 'light' : 'dark');
-                square.dataset.row = r; square.dataset.col = c;
-                
-                if (kingInCheckPos && kingInCheckPos.row === r && kingInCheckPos.col === c) {
-                    square.classList.add('in-check');
-                }
+  boardState.forEach((row, r) => {
+    row.forEach((pieceName, c) => {
+      const square = document.createElement('div');
+      square.classList.add('square', (r + c) % 2 === 0 ? 'light' : 'dark');
+      square.dataset.row = r;
+      square.dataset.col = c;
 
-                if (pieceName) {
-                    const piece = PIECES[pieceName];
-                    const pieceElement = document.createElement('span');
-                    pieceElement.classList.add('piece', piece.color === 'white' ? 'white-piece' : 'black-piece');
-                    pieceElement.innerText = piece.symbol;
-                    if (piece.color === (isWhiteTurn ? 'white' : 'black') && !isGameOver) {
-                        pieceElement.draggable = true;
-                    }
-                    pieceElement.addEventListener('dragstart', (e) => handleDragStart(e, r, c));
-                    square.appendChild(pieceElement);
-                }
-                square.addEventListener('click', () => onSquareClick(r, c));
-                square.addEventListener('dragover', handleDragOver);
-                square.addEventListener('drop', (e) => handleDrop(e, r, c));
-                boardElement.appendChild(square);
-            });
-        });
-    }
+      if (kingInCheckPos && kingInCheckPos.row === r && kingInCheckPos.col === c) {
+        square.classList.add('in-check');
+      }
+
+      if (pieceName) {
+        const piece = PIECES[pieceName];
+        const pieceElement = document.createElement('div');
+        pieceElement.classList.add('piece');
+        pieceElement.innerHTML = piece.svg; // <<< AQUI MUDOU
+        if (piece.color === (isWhiteTurn ? 'white' : 'black') && !isGameOver) {
+          pieceElement.draggable = true;
+        }
+        pieceElement.addEventListener('dragstart', e => handleDragStart(e, r, c));
+        square.appendChild(pieceElement);
+      }
+
+      square.addEventListener('click', () => onSquareClick(r, c));
+      square.addEventListener('dragover', e => e.preventDefault());
+      square.addEventListener('drop', e => handleDrop(e, r, c));
+
+      boardElement.appendChild(square);
+    });
+  });
+}
+
 
     // --- LÓGICA DE INTERAÇÃO ---
     function onSquareClick(row, col) {
