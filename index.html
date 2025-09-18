@@ -38,11 +38,20 @@
 
     /* destaque de seleção e movimentos válidos */
     .square.selected{outline:4px solid rgba(80,160,255,0.25);box-shadow:0 0 0 4px rgba(80,160,255,0.06) inset}
-    .square.valid-move::after{
-        content:"";position:absolute;width:22px;height:22px;border-radius:50%;box-shadow:0 0 0 4px rgba(0,0,0,0.12) inset;opacity:0.9;
-        display:block;
-        border:3px solid rgba(255,255,255,0.15);
-    }
+    ./* Código Modificado com Indicador Verde */
+.square.valid-move::after{
+    content:"";
+    position:absolute;
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    box-shadow:0 0 0 4px rgba(0,0,0,0.12) inset;
+    opacity:0.9;
+    display:block;
+    /* A linha abaixo foi alterada para uma cor verde */
+    border:3px solid rgba(40, 180, 40, 0.7);
+}
+
     .square .piece{cursor:grab;display:inline-block;line-height:1;transform:translateY(2px)}
     .piece.dragging{opacity:0.6;cursor:grabbing}
 
