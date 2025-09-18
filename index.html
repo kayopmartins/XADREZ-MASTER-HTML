@@ -328,5 +328,124 @@ document.addEventListener('DOMContentLoaded', () => {
     return false;
   }
 
-  function findKing(color,board){
-    for(let r=0;r
+    function findKing(color, board) {
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        if (board[r][c] === `${color}_king`) return { row: r, col: c };
+      }
+    }
+    return null;
+  }
+
+  function clearSelection() {
+    if (selectedSquare) {
+      const prev = getSquareElement(selectedSquare.row, selectedSquare.col);
+      if (prev) prev.classList.remove('selected');
+    }
+    selectedSquare = null;
+    document.querySelectorAll('.valid-move').forEach(el => el.classList.remove('valid-move'));
+  }
+
+  function highlightValidMoves(startRow, startCol) {
+    document.querySelectorAll('.valid-move').forEach(el => el.classList.remove('valid-move'));
+    const legalMoves = getAllLegalMoves(isWhiteTurn ? 'white' : 'black');
+    legalMoves.forEach(move => {
+      if (move.startRow === startRow && move.startCol === startCol) {
+        const el = getSquareElement(move.endRow, move.endCol);
+        if (el) el.classList.add('valid-move');
+      }
+    });
+  }
+
+  function getSquareElement(row, col) {
+    return boardElement.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+  }
+
+  // adicionar roque nas pseudo-legal moves do rei (usando castlingRights e verificações de ataque)
+  // substitui a versão anterior de getPseudoLegalMoves para incluir roque para o rei
+  // (coloquei esta função aqui novamente para garantir a versão com roque)
+  function getPseudoLegalMoves(r, c, board) {
+    const pieceName = board[r][c];
+    const piece = PIECES[pieceName];
+    const moves = [];
+    const color = piece.color;
+    const add = (endR, endC, props = {}) => {
+      if (endR >= 0 && endR < 8 && endC >= 0 && endC < 8) {
+        const target = board[endR][endC];
+        if (!target || PIECES[target].color !== color) {
+          moves.push({ endRow: endR, endCol: endC, ...props });
+        }
+      }
+    };
+    const addLine = (dr, dc) => {
+      let cr = r + dr, cc = c + dc;
+      while (cr >= 0 && cr < 8 && cc >= 0 && cc < 8) {
+        const target = board[cr][cc];
+        if (target) {
+          if (PIECES[target].color !== color) add(cr, cc);
+          break;
+        }
+        add(cr, cc);
+        cr += dr; cc += dc;
+      }
+    };
+
+    if (pieceName.includes('pawn')) {
+      const dir = color === 'white' ? -1 : 1;
+      if (board[r + dir] && !board[r + dir][c]) {
+        add(r + dir, c);
+        if ((r === 6 && color === 'white') || (r === 1 && color === 'black')) {
+          if (!board[r + 2 * dir][c]) add(r + 2 * dir, c);
+        }
+      }
+      [-1, 1].forEach(dc => {
+        const target = board[r + dir] ? board[r + dir][c + dc] : null;
+        if (target && PIECES[target].color !== color) add(r + dir, c + dc);
+        if (enPassantTarget && r + dir === enPassantTarget.row && c + dc === enPassantTarget.col) add(r + dir, c + dc, { enPassant: true });
+      });
+    } else if (pieceName.includes('knight')) {
+      [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]].forEach(([dr,dc])=>add(r+dr,c+dc));
+    } else if (pieceName.includes('king')) {
+      [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]].forEach(([dr,dc])=>add(r+dr,c+dc));
+      // castling (roque) — verificar direitos e se as casas estão livres e não atacadas
+      const cr = castlingRights[color[0]]; // 'w' or 'b'
+      if (cr) {
+        // curta (rei lado do rei)
+        if (cr.k) {
+          const c1 = c + 1, c2 = c + 2;
+          if (!board[r][c1] && !board[r][c2]) {
+            if (!isSquareAttacked(r, c, color, board) && !isSquareAttacked(r, c1, color, board) && !isSquareAttacked(r, c2, color, board)) {
+              add(r, c2, { castling: true });
+            }
+          }
+        }
+        // longa (rei lado da dama)
+        if (cr.q) {
+          const c1 = c - 1, c2 = c - 2, c3 = c - 3;
+          if (!board[r][c1] && !board[r][c2] && !board[r][c3]) {
+            if (!isSquareAttacked(r, c, color, board) && !isSquareAttacked(r, c1, color, board) && !isSquareAttacked(r, c2, color, board)) {
+              add(r, c2, { castling: true });
+            }
+          }
+        }
+      }
+    } else {
+      const dirs = [];
+      if (pieceName.includes('rook') || pieceName.includes('queen')) dirs.push([-1,0],[1,0],[0,-1],[0,1]);
+      if (pieceName.includes('bishop') || pieceName.includes('queen')) dirs.push([-1,-1],[-1,1],[1,-1],[1,1]);
+      dirs.forEach(([dr,dc])=>addLine(dr,dc));
+    }
+    return moves;
+  }
+
+  // Reutiliza isSquareAttacked (já definida acima) — garante verificação baseada em pseudo-moves
+  // (não precisa reimplementar aqui)
+
+  // inicialização final
+  initializeGame();
+  resetButton.addEventListener('click', initializeGame);
+});
+</script>
+</body>
+</html>
+
