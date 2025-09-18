@@ -115,14 +115,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameOverMessage = document.getElementById('game-over-message');
 
     // --- DEFINIÇÃO DAS PEÇAS ---
-    const PIECES = {
-        white_pawn: { symbol: '♙', color: 'white' }, white_rook: { symbol: '♖', color: 'white' },
-        white_knight: { symbol: '♘', color: 'white' }, white_bishop: { symbol: '♗', color: 'white' },
-        white_queen: { symbol: '♕', color: 'white' }, white_king: { symbol: '♔', color: 'white' },
-        black_pawn: { symbol: '♟', color: 'black' }, black_rook: { symbol: '♜', color: 'black' },
-        black_knight: { symbol: '♞', color: 'black' }, black_bishop: { symbol: '♝', color: 'black' },
-        black_queen: { symbol: '♛', color: 'black' }, black_king: { symbol: '♚', color: 'black' }
-    };
+    // SVGs estilizados
+const SVGs = {
+  white_pawn: `<svg viewBox="0 0 45 45"><circle cx="22" cy="15" r="6" fill="#fff" stroke="#000"/><rect x="18" y="22" width="9" height="15" fill="#fff" stroke="#000"/></svg>`,
+  white_rook: `<svg viewBox="0 0 45 45"><rect x="12" y="15" width="21" height="20" fill="#fff" stroke="#000"/></svg>`,
+  white_knight: `<svg viewBox="0 0 45 45"><path d="M15 30 L30 15 L35 25 L25 35 Z" fill="#fff" stroke="#000"/></svg>`,
+  white_bishop: `<svg viewBox="0 0 45 45"><circle cx="22" cy="15" r="6" fill="#fff" stroke="#000"/><rect x="18" y="22" width="9" height="15" fill="#fff" stroke="#000"/></svg>`,
+  white_queen: `<svg viewBox="0 0 45 45"><circle cx="12" cy="12" r="4" fill="#fff" stroke="#000"/><circle cx="22" cy="10" r="4" fill="#fff" stroke="#000"/><circle cx="32" cy="12" r="4" fill="#fff" stroke="#000"/><rect x="15" y="18" width="14" height="18" fill="#fff" stroke="#000"/></svg>`,
+  white_king: `<svg viewBox="0 0 45 45"><rect x="19" y="10" width="6" height="20" fill="#fff" stroke="#000"/><rect x="15" y="30" width="14" height="6" fill="#fff" stroke="#000"/></svg>`,
+  black_pawn: `<svg viewBox="0 0 45 45"><circle cx="22" cy="15" r="6" fill="#000" stroke="#fff"/><rect x="18" y="22" width="9" height="15" fill="#000" stroke="#fff"/></svg>`,
+  black_rook: `<svg viewBox="0 0 45 45"><rect x="12" y="15" width="21" height="20" fill="#000" stroke="#fff"/></svg>`,
+  black_knight: `<svg viewBox="0 0 45 45"><path d="M15 30 L30 15 L35 25 L25 35 Z" fill="#000" stroke="#fff"/></svg>`,
+  black_bishop: `<svg viewBox="0 0 45 45"><circle cx="22" cy="15" r="6" fill="#000" stroke="#fff"/><rect x="18" y="22" width="9" height="15" fill="#000" stroke="#fff"/></svg>`,
+  black_queen: `<svg viewBox="0 0 45 45"><circle cx="12" cy="12" r="4" fill="#000" stroke="#fff"/><circle cx="22" cy="10" r="4" fill="#000" stroke="#fff"/><circle cx="32" cy="12" r="4" fill="#000" stroke="#fff"/><rect x="15" y="18" width="14" height="18" fill="#000" stroke="#fff"/></svg>`,
+  black_king: `<svg viewBox="0 0 45 45"><rect x="19" y="10" width="6" height="20" fill="#000" stroke="#fff"/><rect x="15" y="30" width="14" height="6" fill="#000" stroke="#fff"/></svg>`
+};
+
+// Criar objeto PIECES com svg + cor
+const PIECES = {};
+for (const key in SVGs) {
+  PIECES[key] = { svg: SVGs[key], color: key.startsWith("white") ? "white" : "black" };
+}
+
     
     // --- ESTADO DO JOGO ---
     let boardState, isWhiteTurn, selectedSquare, enPassantTarget, castlingRights, isGameOver;
