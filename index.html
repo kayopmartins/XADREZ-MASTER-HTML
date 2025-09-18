@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -6,11 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Jogo de Xadrez</title>
 <style>
+    /* ✅ ALTERAÇÃO 1: Cores do tabuleiro mais claras */
     :root{
         --bg:#2f2b2b;
         --panel:#343233;
-        --light-square:#f3e6d0;
-        --dark-square:#be8f68;
+        --light-square: #EADDC5; /* Um branco-creme suave */
+        --dark-square: #A8886A;  /* Um castanho mais claro e quente */
         --accent:#cbb695;
         --shadow: 0 10px 30px rgba(0,0,0,0.7);
         --red-check: rgba(255,60,60,0.28);
@@ -33,8 +33,8 @@
     }
 
     .square{position:relative;display:flex;align-items:center;justify-content:center;font-size:34px;user-select:none;transition:background .12s, transform .08s;}
-    .square.light{background:var(--light-square); color:#2b1f10}
-    .square.dark{background:var(--dark-square); color:#100b08}
+    .square.light{background:var(--light-square);}
+    .square.dark{background:var(--dark-square);}
 
     /* destaque de seleção e movimentos válidos */
     .square.selected{outline:4px solid rgba(80,160,255,0.25);box-shadow:0 0 0 4px rgba(80,160,255,0.06) inset}
@@ -50,17 +50,19 @@
     .square.in-check{ box-shadow: inset 0 0 0 6px var(--red-check); transition: box-shadow .18s; }
     .square.in-checkmate{ box-shadow: inset 0 0 0 8px var(--red-checkmate); filter:brightness(0.95); }
 
-    /* ✅ ALTERAÇÃO AQUI: Cores explícitas para as peças brancas e pretas */
-    .white-piece{ 
-        color: #FFFFFF; /* Peças de baixo agora são brancas */
-        text-shadow: 0 2px 2px rgba(0,0,0,0.5); 
-        font-size:36px; 
+    /* ✅ ALTERAÇÃO 2: Contorno preto para as peças brancas */
+    .white-piece{
+        color: #FFFFFF;
+        /* Adiciona um contorno preto de 1px e mantém a sombra original */
+        text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 2px 2px rgba(0,0,0,0.5);
+        font-size:36px;
     }
-    .black-piece{ 
-        color: #000000; /* Peças de cima agora são pretas */
-        text-shadow: 0 1px 1px rgba(255,255,255,0.1); 
-        font-size:36px; 
+    .black-piece{
+        color: #000000;
+        text-shadow: 0 1px 1px rgba(255,255,255,0.1);
+        font-size:36px;
     }
+
     /* botões e modal */
     .controls{display:flex;gap:12px;align-items:center}
     button{background:var(--ui-btn);border:none;padding:10px 18px;border-radius:8px;color:#ddd;cursor:pointer;box-shadow:0 6px 14px rgba(0,0,0,0.45)}
@@ -97,7 +99,6 @@
     </div>
 </div>
 
-<!-- Promoção -->
 <div id="promotion-modal" class="hidden" aria-hidden="true" role="dialog" aria-label="Promoção de Peão">
     <button class="promotion-choice" data-piece="queen" title="Dama"></button>
     <button class="promotion-choice" data-piece="rook" title="Torre"></button>
@@ -105,13 +106,11 @@
     <button class="promotion-choice" data-piece="knight" title="Cavalo"></button>
 </div>
 
-<!-- Game over overlay -->
 <div id="game-over-overlay" class="hidden">
     <div id="game-over-message"></div>
 </div>
 
-<script>
-/* === Script do jogo (adaptado do arquivo fornecido, com correção para verificações em tabuleiros temporários) === */
+<script charset="UTF-8">
 document.addEventListener('DOMContentLoaded', () => {
     // --- ELEMENTOS DO DOM ---
     const boardElement = document.getElementById('chessboard');
@@ -145,7 +144,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ];
     }
     
-    // --- FUNÇÕES DE INICIALIZAÇÃO E RENDERIZAÇÃO ---
     function initializeGame() {
         boardState = getInitialBoard(); isWhiteTurn = true; selectedSquare = null;
         enPassantTarget = null; castlingRights = { w: { k: true, q: true }, b: { k: true, q: true } };
@@ -187,19 +185,31 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- LÓGICA DE INTERAÇÃO ---
+    // ✅ ALTERAÇÃO 3: Lógica de clique melhorada para alternar a seleção
     function onSquareClick(row, col) {
         if (isGameOver) return;
+
+        const pieceName = boardState[row][col];
+        const pieceColor = pieceName ? PIECES[pieceName].color : null;
+        const isMyPiece = pieceColor === (isWhiteTurn ? 'white' : 'black');
+
         if (selectedSquare) {
-            tryMove(selectedSquare.row, selectedSquare.col, row, col);
-            clearSelection();
-        } else {
-            const pieceName = boardState[row][col];
-            if (pieceName && PIECES[pieceName].color === (isWhiteTurn ? 'white' : 'black')) {
+            // Se clicar noutra peça sua, muda a seleção
+            if (isMyPiece) {
+                clearSelection();
                 selectedSquare = { row, col };
                 getSquareElement(row, col).classList.add('selected');
                 highlightValidMoves(row, col);
+            } else {
+                // Tenta mover para a casa vazia ou para a peça do oponente
+                tryMove(selectedSquare.row, selectedSquare.col, row, col);
+                clearSelection();
             }
+        } else if (isMyPiece) {
+            // Se nenhuma peça estiver selecionada, seleciona a peça clicada
+            selectedSquare = { row, col };
+            getSquareElement(row, col).classList.add('selected');
+            highlightValidMoves(row, col);
         }
     }
     
@@ -220,7 +230,6 @@ document.addEventListener('DOMContentLoaded', () => {
         clearSelection();
     }
 
-    // --- NÚCLEO DA LÓGICA DO JOGO ---
     function tryMove(startRow, startCol, endRow, endCol) {
         const legalMoves = getAllLegalMoves(isWhiteTurn ? 'white' : 'black');
         const move = legalMoves.find(m => m.startRow === startRow && m.startCol === startCol && m.endRow === endRow && m.endCol === endCol);
@@ -273,7 +282,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentColor = isWhiteTurn ? 'white' : 'black';
         const legalMoves = getAllLegalMoves(currentColor);
         
-        // remove previous in-checkmate highlighting
         document.querySelectorAll('.in-checkmate').forEach(el => el.classList.remove('in-checkmate'));
 
         if (legalMoves.length === 0) {
@@ -303,7 +311,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderBoard();
     }
 
-    // --- LÓGICA DE VALIDAÇÃO DE REGRAS (corrigida para aceitar tabuleiros temporários) ---
     function getAllLegalMoves(color) {
         const legalMoves = [];
         for (let r = 0; r < 8; r++) {
@@ -313,12 +320,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const pseudoLegalMoves = getPseudoLegalMoves(r, c, boardState);
                     for (const move of pseudoLegalMoves) {
                         const tempBoard = JSON.parse(JSON.stringify(boardState));
-                        
-                        // Simula o movimento no tabuleiro temporário
                         tempBoard[move.endRow][move.endCol] = tempBoard[r][c];
                         tempBoard[r][c] = null;
-                        
-                        // A verificação crucial: o movimento deixa o próprio rei em xeque?
                         if (!isKingInCheck(color, tempBoard)) {
                             legalMoves.push({ startRow: r, startCol: c, ...move });
                         }
@@ -329,7 +332,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return legalMoves;
     }
 
-    // agora getPseudoLegalMoves aceita um board opcional (para permitir simulações)
     function getPseudoLegalMoves(r, c, board = boardState) {
         const pieceName = board[r][c], piece = PIECES[pieceName], moves = [], color = piece.color;
         const add = (endR, endC, props = {}) => {
@@ -364,7 +366,6 @@ document.addEventListener('DOMContentLoaded', () => {
             [-1, 1].forEach(dc => {
                 const target = board[r + dir] ? board[r + dir][c + dc] : null;
                 if (target && PIECES[target].color !== color) add(r + dir, c + dc);
-                // enPassant: usa enPassantTarget do estado atual (poderia ser expandido para simulações)
                 if (enPassantTarget && r + dir === enPassantTarget.row && c + dc === enPassantTarget.col) add(r + dir, c + dc, { enPassant: true });
             });
         } else if (pieceName.includes('knight')) {
@@ -372,7 +373,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (pieceName.includes('king')) {
             [[-1,-1], [-1,0], [-1,1], [0,-1], [0,1], [1,-1], [1,0], [1,1]].forEach(([dr, dc]) => add(r + dr, c + dc));
             const cr = castlingRights[color[0]];
-            // para castling, precisamos garantir que as casas não estejam ocupadas e que não estejam sob ataque
             if (cr && cr.k && !board[r][c+1] && !board[r][c+2] && !isSquareAttacked(r, c, color, board) && !isSquareAttacked(r, c+1, color, board) && !isSquareAttacked(r, c+2, color, board)) add(r, c+2, { castling: true });
             if (cr && cr.q && !board[r][c-1] && !board[r][c-2] && !board[r][c-3] && !isSquareAttacked(r, c, color, board) && !isSquareAttacked(r, c-1, color, board) && !isSquareAttacked(r, c-2, color, board)) add(r, c-2, { castling: true });
         } else {
@@ -395,7 +395,6 @@ document.addEventListener('DOMContentLoaded', () => {
             for (let c = 0; c < 8; c++) {
                 const pieceName = board[r][c];
                 if (pieceName && PIECES[pieceName].color === opponentColor) {
-                    // usamos getPseudoLegalMoves com o board passado para verificar ataques no tabuleiro simulado também
                     const moves = getPseudoLegalMoves(r, c, board); 
                     if (moves.some(move => move.endRow === row && move.endCol === col)) return true;
                 }
@@ -429,7 +428,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // --- FUNÇÕES AUXILIARES ---
     function clearSelection() {
         if (selectedSquare) {
             getSquareElement(selectedSquare.row, selectedSquare.col)?.classList.remove('selected');
@@ -452,7 +450,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return boardElement.querySelector(`[data-row='${row}'][data-col='${col}']`);
     }
 
-    // --- INICIALIZAÇÃO ---
     initializeGame();
     resetButton.addEventListener('click', initializeGame);
 });
