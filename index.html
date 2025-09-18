@@ -25,61 +25,62 @@
         display:flex;flex-direction:column;align-items:center;gap:16px;
     }
 
-    #chessboard{
+    #chessboard{ 
         width:560px;height:560px;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);
         border:10px solid #151515;border-radius:6px;overflow:hidden;background:#111;
         box-shadow: 0 20px 40px rgba(0,0,0,0.7), inset 0 0 0 6px rgba(0,0,0,0.25);
     }
 
     .square{position:relative;display:flex;align-items:center;justify-content:center;font-size:34px;user-select:none;transition:background .12s, transform .08s;}
-    .square.light{background:var(--light-square); color:#2b1f10}
-    .square.dark{background:var(--dark-square); color:#100b08}
+    .square.light{background:var(--light-square);} /* Cor do texto removida daqui */
+    .square.dark{background:var(--dark-square);} /* Cor do texto removida daqui */
 
+    /* destaque de seleção e movimentos válidos */
     .square.selected{outline:4px solid rgba(80,160,255,0.25);box-shadow:0 0 0 4px rgba(80,160,255,0.06) inset}
     .square.valid-move::after{
         content:"";position:absolute;width:22px;height:22px;border-radius:50%;box-shadow:0 0 0 4px rgba(0,0,0,0.12) inset;opacity:0.9;
         display:block;
         border:3px solid rgba(255,255,255,0.15);
     }
-    .square .piece{cursor:grab;display:flex;align-items:center;justify-content:center;width:100%;height:100%;}
-    .piece.dragging{opacity:0.6;cursor:grabbing;transform: scale(1.1);}
+    .square .piece{cursor:grab;display:inline-block;line-height:1;transform:translateY(2px)}
+    .piece.dragging{opacity:0.6;cursor:grabbing}
 
+    /* Xeque e Xeque-mate */
     .square.in-check{ box-shadow: inset 0 0 0 6px var(--red-check); transition: box-shadow .18s; }
     .square.in-checkmate{ box-shadow: inset 0 0 0 8px var(--red-checkmate); filter:brightness(0.95); }
-
-    /* ✅ CSS AJUSTADO PARA AS NOVAS PEÇAS SVG */
-    .piece svg {
-        width: 85%;
-        height: 85%;
-        filter: drop-shadow(0 2px 2px rgba(0,0,0,0.4));
+    
+    /* ✅ ALTERAÇÃO AQUI: Cores explícitas para as peças brancas e pretas */
+    .white-piece{ 
+        color: #FFFFFF; /* Peças de baixo agora são brancas */
+        text-shadow: 0 2px 2px rgba(0,0,0,0.5); 
+        font-size:36px; 
+    }
+    .black-piece{ 
+        color: #000000; /* Peças de cima agora são pretas */
+        text-shadow: 0 1px 1px rgba(255,255,255,0.1); 
+        font-size:36px; 
     }
 
-    .white-piece svg {
-        fill: #fcfcfc; /* Cor branca, como no link */
-    }
-
-    .black-piece svg {
-        fill: #2c2c2c; /* Cor escura para combinar com o tema */
-    }
-
+    /* botões e modal */
     .controls{display:flex;gap:12px;align-items:center}
     button{background:var(--ui-btn);border:none;padding:10px 18px;border-radius:8px;color:#ddd;cursor:pointer;box-shadow:0 6px 14px rgba(0,0,0,0.45)}
     button:hover{transform:translateY(-1px)}
     #promotion-modal{ position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#222;padding:18px;border-radius:10px;box-shadow:0 18px 40px rgba(0,0,0,0.7); display:flex;gap:10px;z-index:40;}
     #promotion-modal.hidden{display:none}
-    .promotion-choice{padding:10px;width:70px;height:70px;border-radius:8px;background:#2d2b2b;border:1px solid rgba(255,255,255,0.02);cursor:pointer}
+    .promotion-choice{font-size:34px;padding:10px 14px;border-radius:8px;background:#2d2b2b;border:1px solid rgba(255,255,255,0.02);cursor:pointer}
     .promotion-choice:hover{transform:translateY(-3px)}
 
+    /* overlay final de jogo */
     #game-over-overlay{position:fixed;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.45), rgba(0,0,0,0.7));display:flex;align-items:center;justify-content:center;z-index:60}
     #game-over-overlay.hidden{display:none}
     #game-over-message{background:#151515;color:#fff;padding:26px;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.7);text-align:center;font-size:20px}
 
+    /* responsividade */
     @media (max-width:640px){
         #chessboard{width:92vw;height:92vw}
         h1{font-size:22px}
     }
 </style>
-    
 </head>
 <body>
 <div class="wrap">
@@ -107,8 +108,9 @@
     <div id="game-over-message"></div>
 </div>
 
-<script>
+<script charset="UTF-8"> // ✅ Adicionado charset="UTF-8" para garantir que os símbolos das peças carreguem corretamente.
 document.addEventListener('DOMContentLoaded', () => {
+    // --- ELEMENTOS DO DOM ---
     const boardElement = document.getElementById('chessboard');
     const statusElement = document.getElementById('game-status');
     const promotionModal = document.getElementById('promotion-modal');
@@ -116,23 +118,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameOverOverlay = document.getElementById('game-over-overlay');
     const gameOverMessage = document.getElementById('game-over-message');
 
-    // ✅ NOVO CONJUNTO DE SVGs - PEÇAS DO SITE svgsilh.com
+    // --- DEFINIÇÃO DAS PEÇAS ---
     const PIECES = {
-        white_king: { svg: `<svg viewBox="0 0 512 512"><path d="M256 96l-32 32 32 32 32-32-32-32zm-64 64l-32 32 32 32 32-32-32-32zm128 0l-32 32 32 32 32-32-32-32zM128 256h256v32H128v-32zm-32 64h320v32H96v-32zm0 64h320v32H96v-32z"/></svg>`, color: 'white' },
-        white_queen: { svg: `<svg viewBox="0 0 512 512"><path d="M128 128l-32 64h320l-32-64H128zm-32 96h320v32H96v-32zm0 64h320v32H96v-32zm0 64h320v32H96v-32zM256 64l-32 32 32 32 32-32-32-32z"/></svg>`, color: 'white' },
-        white_rook: { svg: `<svg viewBox="0 0 512 512"><path d="M128 128h32v-32h64v32h64v-32h64v32h32v96H128v-96zm-32 128h320v32H96v-32zm0 64h320v32H96v-32zm0 64h320v32H96v-32z"/></svg>`, color: 'white' },
-        white_bishop: { svg: `<svg viewBox="0 0 512 512"><path d="M256 96l-32 32 32 32 32-32-32-32zm-96 64h192l-32 32H160l-32-32zm-32 64h256v32H128v-32zm-32 64h320v32H96v-32zm0 64h320v32H96v-32z"/></svg>`, color: 'white' },
-        white_knight: { svg: `<svg viewBox="0 0 512 512"><path d="M224 96l-32 32-32 96h192v-32h-32v-32h-32v-32h-64v-32zm-64 160h256v32H160v-32zm-64 64h320v32H96v-32zm0 64h320v32H96v-32z"/></svg>`, color: 'white' },
-        white_pawn: { svg: `<svg viewBox="0 0 512 512"><path d="M256 128l-32 32 32 32 32-32-32-32zm-64 96h128v32H192v-32zm-64 64h256v32H128v-32zm-32 64h320v32H96v-32z"/></svg>`, color: 'white' },
-        black_king: { svg: `<svg viewBox="0 0 512 512"><path d="M256 96l-32 32 32 32 32-32-32-32zm-64 64l-32 32 32 32 32-32-32-32zm128 0l-32 32 32 32 32-32-32-32zM128 256h256v32H128v-32zm-32 64h320v32H96v-32zm0 64h320v32H96v-32z"/></svg>`, color: 'black' },
-        black_queen: { svg: `<svg viewBox="0 0 512 512"><path d="M128 128l-32 64h320l-32-64H128zm-32 96h320v32H96v-32zm0 64h320v32H96v-32zm0 64h320v32H96v-32zM256 64l-32 32 32 32 32-32-32-32z"/></svg>`, color: 'black' },
-        black_rook: { svg: `<svg viewBox="0 0 512 512"><path d="M128 128h32v-32h64v32h64v-32h64v32h32v96H128v-96zm-32 128h320v32H96v-32zm0 64h320v32H96v-32zm0 64h320v32H96v-32z"/></svg>`, color: 'black' },
-        black_bishop: { svg: `<svg viewBox="0 0 512 512"><path d="M256 96l-32 32 32 32 32-32-32-32zm-96 64h192l-32 32H160l-32-32zm-32 64h256v32H128v-32zm-32 64h320v32H96v-32zm0 64h320v32H96v-32z"/></svg>`, color: 'black' },
-        black_knight: { svg: `<svg viewBox="0 0 512 512"><path d="M224 96l-32 32-32 96h192v-32h-32v-32h-32v-32h-64v-32zm-64 160h256v32H160v-32zm-64 64h320v32H96v-32zm0 64h320v32H96v-32z"/></svg>`, color: 'black' },
-        black_pawn: { svg: `<svg viewBox="0 0 512 512"><path d="M256 128l-32 32 32 32 32-32-32-32zm-64 96h128v32H192v-32zm-64 64h256v32H128v-32zm-32 64h320v32H96v-32z"/></svg>`, color: 'black' }
+        white_pawn: { symbol: '♙', color: 'white' }, white_rook: { symbol: '♖', color: 'white' },
+        white_knight: { symbol: '♘', color: 'white' }, white_bishop: { symbol: '♗', color: 'white' },
+        white_queen: { symbol: '♕', color: 'white' }, white_king: { symbol: '♔', color: 'white' },
+        black_pawn: { symbol: '♟', color: 'black' }, black_rook: { symbol: '♜', color: 'black' },
+        black_knight: { symbol: '♞', color: 'black' }, black_bishop: { symbol: '♝', color: 'black' },
+        black_queen: { symbol: '♛', color: 'black' }, black_king: { symbol: '♚', color: 'black' }
     };
     
-    // --- O RESTO DO SCRIPT PERMANECE IGUAL ---
+    // --- ESTADO DO JOGO ---
     let boardState, isWhiteTurn, selectedSquare, enPassantTarget, castlingRights, isGameOver;
 
     function getInitialBoard() {
@@ -170,10 +166,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (pieceName) {
                     const piece = PIECES[pieceName];
-                    const pieceElement = document.createElement('div');
+                    const pieceElement = document.createElement('span');
                     pieceElement.classList.add('piece', piece.color === 'white' ? 'white-piece' : 'black-piece');
-                    pieceElement.innerHTML = piece.svg;
-
+                    pieceElement.innerText = piece.symbol;
                     if (piece.color === (isWhiteTurn ? 'white' : 'black') && !isGameOver) {
                         pieceElement.draggable = true;
                     }
@@ -188,18 +183,31 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ✅ ALTERAÇÃO AQUI: Lógica de clique melhorada para alternar a seleção de peças.
     function onSquareClick(row, col) {
         if (isGameOver) return;
+
+        const pieceName = boardState[row][col];
+        const pieceColor = pieceName ? PIECES[pieceName].color : null;
+        const isMyPiece = pieceColor === (isWhiteTurn ? 'white' : 'black');
+
         if (selectedSquare) {
-            tryMove(selectedSquare.row, selectedSquare.col, row, col);
-            clearSelection();
-        } else {
-            const pieceName = boardState[row][col];
-            if (pieceName && PIECES[pieceName].color === (isWhiteTurn ? 'white' : 'black')) {
+            // Se clicar noutra peça sua, muda a seleção
+            if (isMyPiece) {
+                clearSelection();
                 selectedSquare = { row, col };
                 getSquareElement(row, col).classList.add('selected');
                 highlightValidMoves(row, col);
+            } else {
+                // Tenta mover para a casa vazia ou para a peça do oponente
+                tryMove(selectedSquare.row, selectedSquare.col, row, col);
+                clearSelection();
             }
+        } else if (isMyPiece) {
+            // Se nenhuma peça estiver selecionada, seleciona a peça clicada
+            selectedSquare = { row, col };
+            getSquareElement(row, col).classList.add('selected');
+            highlightValidMoves(row, col);
         }
     }
     
@@ -323,9 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getPseudoLegalMoves(r, c, board = boardState) {
-        const pieceName = board[r][c];
-        if (!pieceName) return [];
-        const piece = PIECES[pieceName], moves = [], color = piece.color;
+        const pieceName = board[r][c], piece = PIECES[pieceName], moves = [], color = piece.color;
         const add = (endR, endC, props = {}) => {
             if (endR >= 0 && endR < 8 && endC >= 0 && endC < 8) {
                 const target = board[endR][endC];
@@ -407,19 +413,16 @@ document.addEventListener('DOMContentLoaded', () => {
     function handlePawnPromotion(row, col) {
         promotionModal.classList.remove('hidden');
         const color = isWhiteTurn ? 'white' : 'black';
-        
         promotionModal.querySelectorAll('.promotion-choice').forEach(choice => {
-            const newChoice = choice.cloneNode(true);
-            choice.parentNode.replaceChild(newChoice, choice);
-
-            const pieceType = newChoice.dataset.piece;
-            newChoice.innerHTML = PIECES[`${color}_${pieceType}`].svg;
-
-            newChoice.addEventListener('click', () => {
+            const pieceType = choice.dataset.piece;
+            choice.innerText = PIECES[`${color}_${pieceType}`].symbol;
+            const handler = () => {
                 boardState[row][col] = `${color}_${pieceType}`;
                 promotionModal.classList.add('hidden');
                 finalizeTurn();
-            }, { once: true });
+                choice.parentNode.replaceWith(choice.parentNode.cloneNode(true));
+            };
+            choice.addEventListener('click', handler, { once: true });
         });
     }
     
@@ -448,6 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeGame();
     resetButton.addEventListener('click', initializeGame);
 });
+
 <script src="script.js" charset="UTF-8"></script>
 </body>
 </html>
