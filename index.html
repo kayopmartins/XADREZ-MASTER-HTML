@@ -141,11 +141,12 @@ const SVGs = {
 };
 
 // Criar objeto PIECES com svg + cor
+
 const PIECES = {};
 for (const key in SVGs) {
-  pieceElement.classList.add('piece', piece.color === 'white' ? 'white-piece' : 'black-piece');
-
+  PIECES[key] = { svg: SVGs[key], color: key.startsWith("white") ? "white" : "black" };
 }
+
     
     // --- ESTADO DO JOGO ---
     let boardState, isWhiteTurn, selectedSquare, enPassantTarget, castlingRights, isGameOver;
