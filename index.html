@@ -109,6 +109,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // --- ELEMENTOS DO DOM ---
     const boardElement = document.getElementById('chessboard');
     const statusElement = document.getElementById('game-status');
     const promotionModal = document.getElementById('promotion-modal');
@@ -116,28 +117,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameOverOverlay = document.getElementById('game-over-overlay');
     const gameOverMessage = document.getElementById('game-over-message');
 
-    // ✅ NOVO CONJUNTO DE SVGs ESTILO "FLATICON"
-    const SVGs = {
-        white_king: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M22.5 9c-1.4 0-2.5 1.1-2.5 2.5 0 .9.5 1.7 1.2 2.1-.2.1-.3.2-.3.4 0 .2.1.4.3.5-.8.5-1.2 1.4-1.2 2.5 0 .8.2 1.5.6 2.1-.6.1-1.1.6-1.1 1.2 0 .7.6 1.2 1.2 1.2h6.2c.7 0 1.2-.6 1.2-1.2 0-.7-.5-1.1-1.1-1.2.4-.6.6-1.3.6-2.1 0-1.1-.5-2-1.2-2.5.2-.1.3-.3.3-.5 0-.2-.1-.3-.3-.4.8-.4 1.2-1.2 1.2-2.1 0-1.4-1.1-2.5-2.5-2.5zm0 1c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5zM15 23.5v7.5h15v-7.5zM14 32v2h17v-2z"/></svg>`,
-        white_queen: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M11 13.7c0-1.2.8-2.2 2-2.2 1.2 0 2 .8 2 2.2 0 1-.6 1.8-1.4 2.1.2 0 .3.2.3.3 0 .2-.1.3-.3.4.6.4 1 1.2 1 2 0 .7.2 1.3.5 1.8-.5.1-1 .5-1 1.1 0 .6.5 1.1 1 1.1h13c.6 0 1-.5 1-1.1 0-.6-.4-1-1-1.1.3-.5.5-1.1.5-1.8 0-.8.4-1.6 1-2 .2-.1.3-.2.3-.4 0-.1-.1-.3-.3-.3C30.4 15.5 30 14.7 30 13.7c0-1.4-.8-2.2-2-2.2-1.2 0-2 1-2 2.2 0 .7.3 1.2.7 1.6-.2.1-.3.2-.3.4 0 .2.1.3.3.4s1.1 1.3 1.1 2.2c0 1.2-.8 2.2-2 2.2s-2-.8-2-2.2c0-.8.5-1.7 1-2.2.2-.1.3-.2.3-.4 0-.1-.1-.3-.3-.3-.8-.4-1.1-1.1-1.1-1.8zm11.5-2.2c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5zM15 23.5v7.5h15v-7.5zM14 32v2h17v-2z"/></svg>`,
-        white_rook: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M16 11h13v2h-13zM17.5 14h10v1.5h-10zM15 16v15h15V16zM16.5 17.5h12v12h-12zM14 32v2h17v-2z"/></svg>`,
-        white_bishop: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M22.5 10c-1.4 0-2.5 1.1-2.5 2.5s1.1 2.5 2.5 2.5 2.5-1.1 2.5-2.5-1.1-2.5-2.5-2.5zm0 1c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5zM18 16l4.5 7 4.5-7zM15 24v7h15v-7zM14 32v2h17v-2z"/></svg>`,
-        white_knight: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M25 10.5c-1.2 0-2.2.5-3 1.3-.8-.8-1.8-1.3-3-1.3-2.2 0-4 1.8-4 4 0 1.3.6 2.4 1.6 3.2-1 .2-1.8.5-2.6 1-.8.5-1.4 1.2-1.9 2-.2.3-.4.7-.4 1 0 .6.3 1.2.7 1.7.5.5 1.1.7 1.7.7h13.3c.6 0 1.2-.2 1.7-.7.4-.5.7-1.1.7-1.7 0-.3-.1-.7-.4-1-.5-.8-1.1-1.5-1.9-2-.8-.5-1.6-.8-2.6-1 .9-.8 1.6-1.9 1.6-3.2 0-2.2-1.8-4-4-4zm-3 1.5c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5zm-3.5 11v9h12v-9zM15 32v2h15v-2z"/></svg>`,
-        white_pawn: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M22.5 13c-1.9 0-3.5 1.6-3.5 3.5S20.6 20 22.5 20s3.5-1.6 3.5-3.5-1.6-3.5-3.5-3.5zM19 21v10h7V21zM18 32v2h9v-2z"/></svg>`,
-        black_king: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M22.5 9c-1.4 0-2.5 1.1-2.5 2.5 0 .9.5 1.7 1.2 2.1-.2.1-.3.2-.3.4 0 .2.1.4.3.5-.8.5-1.2 1.4-1.2 2.5 0 .8.2 1.5.6 2.1-.6.1-1.1.6-1.1 1.2 0 .7.6 1.2 1.2 1.2h6.2c.7 0 1.2-.6 1.2-1.2 0-.7-.5-1.1-1.1-1.2.4-.6.6-1.3.6-2.1 0-1.1-.5-2-1.2-2.5.2-.1.3-.3.3-.5 0-.2-.1-.3-.3-.4.8-.4 1.2-1.2 1.2-2.1 0-1.4-1.1-2.5-2.5-2.5zm0 1c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5zM15 23.5v7.5h15v-7.5zM14 32v2h17v-2z"/></svg>`,
-        black_queen: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M11 13.7c0-1.2.8-2.2 2-2.2 1.2 0 2 .8 2 2.2 0 1-.6 1.8-1.4 2.1.2 0 .3.2.3.3 0 .2-.1.3-.3.4.6.4 1 1.2 1 2 0 .7.2 1.3.5 1.8-.5.1-1 .5-1 1.1 0 .6.5 1.1 1 1.1h13c.6 0 1-.5 1-1.1 0-.6-.4-1-1-1.1.3-.5.5-1.1.5-1.8 0-.8.4-1.6 1-2 .2-.1.3-.2.3-.4 0-.1-.1-.3-.3-.3C30.4 15.5 30 14.7 30 13.7c0-1.4-.8-2.2-2-2.2-1.2 0-2 1-2 2.2 0 .7.3 1.2.7 1.6-.2.1-.3.2-.3.4 0 .2.1.3.3.4s1.1 1.3 1.1 2.2c0 1.2-.8 2.2-2 2.2s-2-.8-2-2.2c0-.8.5-1.7 1-2.2.2-.1.3-.2.3-.4 0-.1-.1-.3-.3-.3-.8-.4-1.1-1.1-1.1-1.8zm11.5-2.2c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5zM15 23.5v7.5h15v-7.5zM14 32v2h17v-2z"/></svg>`,
-        black_rook: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M16 11h13v2h-13zM17.5 14h10v1.5h-10zM15 16v15h15V16zM16.5 17.5h12v12h-12zM14 32v2h17v-2z"/></svg>`,
-        black_bishop: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M22.5 10c-1.4 0-2.5 1.1-2.5 2.5s1.1 2.5 2.5 2.5 2.5-1.1 2.5-2.5-1.1-2.5-2.5-2.5zm0 1c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5zM18 16l4.5 7 4.5-7zM15 24v7h15v-7zM14 32v2h17v-2z"/></svg>`,
-        black_knight: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M25 10.5c-1.2 0-2.2.5-3 1.3-.8-.8-1.8-1.3-3-1.3-2.2 0-4 1.8-4 4 0 1.3.6 2.4 1.6 3.2-1 .2-1.8.5-2.6 1-.8.5-1.4 1.2-1.9 2-.2.3-.4.7-.4 1 0 .6.3 1.2.7 1.7.5.5 1.1.7 1.7.7h13.3c.6 0 1.2-.2 1.7-.7.4-.5.7-1.1.7-1.7 0-.3-.1-.7-.4-1-.5-.8-1.1-1.5-1.9-2-.8-.5-1.6-.8-2.6-1 .9-.8 1.6-1.9 1.6-3.2 0-2.2-1.8-4-4-4zm-3 1.5c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5zm-3.5 11v9h12v-9zM15 32v2h15v-2z"/></svg>`,
-        black_pawn: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M22.5 13c-1.9 0-3.5 1.6-3.5 3.5S20.6 20 22.5 20s3.5-1.6 3.5-3.5-1.6-3.5-3.5-3.5zM19 21v10h7V21zM18 32v2h9v-2z"/></svg>`
+    // ✅ ALTERAÇÃO AQUI: Substituímos os símbolos por código SVG para as peças gráficas.
+    const PIECES = {
+        white_pawn: { svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M22.5 13c-1.9 0-3.5 1.6-3.5 3.5S20.6 20 22.5 20s3.5-1.6 3.5-3.5-1.6-3.5-3.5-3.5zM19 21v10h7V21zM18 32v2h9v-2z"/></svg>`, color: 'white' },
+        white_rook: { svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M16 11h13v2h-13zM17.5 14h10v1.5h-10zM15 16v15h15V16zM16.5 17.5h12v12h-12zM14 32v2h17v-2z"/></svg>`, color: 'white' },
+        white_knight: { svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M25 10.5c-1.2 0-2.2.5-3 1.3-.8-.8-1.8-1.3-3-1.3-2.2 0-4 1.8-4 4 0 1.3.6 2.4 1.6 3.2-1 .2-1.8.5-2.6 1-.8.5-1.4 1.2-1.9 2-.2.3-.4.7-.4 1 0 .6.3 1.2.7 1.7.5.5 1.1.7 1.7.7h13.3c.6 0 1.2-.2 1.7-.7.4-.5.7-1.1.7-1.7 0-.3-.1-.7-.4-1-.5-.8-1.1-1.5-1.9-2-.8-.5-1.6-.8-2.6-1 .9-.8 1.6-1.9 1.6-3.2 0-2.2-1.8-4-4-4zm-3 1.5c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5zm-3.5 11v9h12v-9zM15 32v2h15v-2z"/></svg>`, color: 'white' },
+        white_bishop: { svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M22.5 10c-1.4 0-2.5 1.1-2.5 2.5s1.1 2.5 2.5 2.5 2.5-1.1 2.5-2.5-1.1-2.5-2.5-2.5zm0 1c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5zM18 16l4.5 7 4.5-7zM15 24v7h15v-7zM14 32v2h17v-2z"/></svg>`, color: 'white' },
+        white_queen: { svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M11 13.7c0-1.2.8-2.2 2-2.2 1.2 0 2 .8 2 2.2 0 1-.6 1.8-1.4 2.1.2 0 .3.2.3.3 0 .2-.1.3-.3.4.6.4 1 1.2 1 2 0 .7.2 1.3.5 1.8-.5.1-1 .5-1 1.1 0 .6.5 1.1 1 1.1h13c.6 0 1-.5 1-1.1 0-.6-.4-1-1-1.1.3-.5.5-1.1.5-1.8 0-.8.4-1.6 1-2 .2-.1.3-.2.3-.4 0-.1-.1-.3-.3-.3C30.4 15.5 30 14.7 30 13.7c0-1.4-.8-2.2-2-2.2-1.2 0-2 1-2 2.2 0 .7.3 1.2.7 1.6-.2.1-.3.2-.3.4 0 .2.1.3.3.4s1.1 1.3 1.1 2.2c0 1.2-.8 2.2-2 2.2s-2-.8-2-2.2c0-.8.5-1.7 1-2.2.2-.1.3-.2.3-.4 0-.1-.1-.3-.3-.3-.8-.4-1.1-1.1-1.1-1.8zm11.5-2.2c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5zM15 23.5v7.5h15v-7.5zM14 32v2h17v-2z"/></svg>`, color: 'white' },
+        white_king: { svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M22.5 9c-1.4 0-2.5 1.1-2.5 2.5 0 .9.5 1.7 1.2 2.1-.2.1-.3.2-.3.4 0 .2.1.4.3.5-.8.5-1.2 1.4-1.2 2.5 0 .8.2 1.5.6 2.1-.6.1-1.1.6-1.1 1.2 0 .7.6 1.2 1.2 1.2h6.2c.7 0 1.2-.6 1.2-1.2 0-.7-.5-1.1-1.1-1.2.4-.6.6-1.3.6-2.1 0-1.1-.5-2-1.2-2.5.2-.1.3-.3.3-.5 0-.2-.1-.3-.3-.4.8-.4 1.2-1.2 1.2-2.1 0-1.4-1.1-2.5-2.5-2.5zm0 1c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5zM15 23.5v7.5h15v-7.5zM14 32v2h17v-2z"/></svg>`, color: 'white' },
+        black_pawn: { svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M22.5 13c-1.9 0-3.5 1.6-3.5 3.5S20.6 20 22.5 20s3.5-1.6 3.5-3.5-1.6-3.5-3.5-3.5zM19 21v10h7V21zM18 32v2h9v-2z"/></svg>`, color: 'black' },
+        black_rook: { svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M16 11h13v2h-13zM17.5 14h10v1.5h-10zM15 16v15h15V16zM16.5 17.5h12v12h-12zM14 32v2h17v-2z"/></svg>`, color: 'black' },
+        black_knight: { svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M25 10.5c-1.2 0-2.2.5-3 1.3-.8-.8-1.8-1.3-3-1.3-2.2 0-4 1.8-4 4 0 1.3.6 2.4 1.6 3.2-1 .2-1.8.5-2.6 1-.8.5-1.4 1.2-1.9 2-.2.3-.4.7-.4 1 0 .6.3 1.2.7 1.7.5.5 1.1.7 1.7.7h13.3c.6 0 1.2-.2 1.7-.7.4-.5.7-1.1.7-1.7 0-.3-.1-.7-.4-1-.5-.8-1.1-1.5-1.9-2-.8-.5-1.6-.8-2.6-1 .9-.8 1.6-1.9 1.6-3.2 0-2.2-1.8-4-4-4zm-3 1.5c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5zm-3.5 11v9h12v-9zM15 32v2h15v-2z"/></svg>`, color: 'black' },
+        black_bishop: { svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M22.5 10c-1.4 0-2.5 1.1-2.5 2.5s1.1 2.5 2.5 2.5 2.5-1.1 2.5-2.5-1.1-2.5-2.5-2.5zm0 1c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5zM18 16l4.5 7 4.5-7zM15 24v7h15v-7zM14 32v2h17v-2z"/></svg>`, color: 'black' },
+        black_queen: { svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M11 13.7c0-1.2.8-2.2 2-2.2 1.2 0 2 .8 2 2.2 0 1-.6 1.8-1.4 2.1.2 0 .3.2.3.3 0 .2-.1.3-.3.4.6.4 1 1.2 1 2 0 .7.2 1.3.5 1.8-.5.1-1 .5-1 1.1 0 .6.5 1.1 1 1.1h13c.6 0 1-.5 1-1.1 0-.6-.4-1-1-1.1.3-.5.5-1.1.5-1.8 0-.8.4-1.6 1-2 .2-.1.3-.2.3-.4 0-.1-.1-.3-.3-.3C30.4 15.5 30 14.7 30 13.7c0-1.4-.8-2.2-2-2.2-1.2 0-2 1-2 2.2 0 .7.3 1.2.7 1.6-.2.1-.3.2-.3.4 0 .2.1.3.3.4s1.1 1.3 1.1 2.2c0 1.2-.8 2.2-2 2.2s-2-.8-2-2.2c0-.8.5-1.7 1-2.2.2-.1.3-.2.3-.4 0-.1-.1-.3-.3-.3-.8-.4-1.1-1.1-1.1-1.8zm11.5-2.2c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5zM15 23.5v7.5h15v-7.5zM14 32v2h17v-2z"/></svg>`, color: 'black' },
+        black_king: { svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><path d="M22.5 9c-1.4 0-2.5 1.1-2.5 2.5 0 .9.5 1.7 1.2 2.1-.2.1-.3.2-.3.4 0 .2.1.4.3.5-.8.5-1.2 1.4-1.2 2.5 0 .8.2 1.5.6 2.1-.6.1-1.1.6-1.1 1.2 0 .7.6 1.2 1.2 1.2h6.2c.7 0 1.2-.6 1.2-1.2 0-.7-.5-1.1-1.1-1.2.4-.6.6-1.3.6-2.1 0-1.1-.5-2-1.2-2.5.2-.1.3-.3.3-.5 0-.2-.1-.3-.3-.4.8-.4 1.2-1.2 1.2-2.1 0-1.4-1.1-2.5-2.5-2.5zm0 1c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5zM15 23.5v7.5h15v-7.5zM14 32v2h17v-2z"/></svg>`, color: 'black' }
     };
-
-    const PIECES = {};
-    for (const key in SVGs) {
-      PIECES[key] = { svg: SVGs[key], color: key.startsWith("white") ? "white" : "black" };
-    }
     
-    // --- O RESTO DO SCRIPT PERMANECE IGUAL ---
+    // --- O restante do seu script permanece exatamente igual ---
     let boardState, isWhiteTurn, selectedSquare, enPassantTarget, castlingRights, isGameOver;
 
     function getInitialBoard() {
@@ -175,9 +171,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (pieceName) {
                     const piece = PIECES[pieceName];
-                    const pieceElement = document.createElement('div');
+                    const pieceElement = document.createElement('div'); // Usar DIV para conter o SVG
                     pieceElement.classList.add('piece', piece.color === 'white' ? 'white-piece' : 'black-piece');
-                    pieceElement.innerHTML = piece.svg;
+                    
+                    // ✅ ALTERAÇÃO AQUI: Inserimos o código SVG dentro do elemento.
+                    pieceElement.innerHTML = piece.svg; 
 
                     if (piece.color === (isWhiteTurn ? 'white' : 'black') && !isGameOver) {
                         pieceElement.draggable = true;
@@ -277,8 +275,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentColor = isWhiteTurn ? 'white' : 'black';
         const legalMoves = getAllLegalMoves(currentColor);
         
-        document.querySelectorAll('.in-checkmate').forEach(el => el.classList.remove('in-checkmate'));
-
         if (legalMoves.length === 0) {
             isGameOver = true;
             if (isKingInCheck(currentColor, boardState)) {
@@ -291,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => {
                     gameOverMessage.innerHTML = `Xeque-mate!<br>${winner} venceram.`;
                     gameOverOverlay.classList.remove('hidden');
-                }, 700);
+                }, 1200);
             } else {
                 statusElement.innerText = 'Fim de Jogo';
                 gameOverMessage.innerHTML = 'Empate!<br>Afogamento.';
@@ -312,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
             for (let c = 0; c < 8; c++) {
                 const pieceName = boardState[r][c];
                 if (pieceName && PIECES[pieceName].color === color) {
-                    const pseudoLegalMoves = getPseudoLegalMoves(r, c, boardState);
+                    const pseudoLegalMoves = getPseudoLegalMoves(r, c);
                     for (const move of pseudoLegalMoves) {
                         const tempBoard = JSON.parse(JSON.stringify(boardState));
                         tempBoard[move.endRow][move.endCol] = tempBoard[r][c];
@@ -354,14 +350,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (pieceName.includes('pawn')) {
             const dir = color === 'white' ? -1 : 1;
-            if (board[r + dir] && !board[r + dir][c]) {
+            if (!board[r + dir]?.[c]) {
                 add(r + dir, c);
                 if ((r === 6 && color === 'white') || (r === 1 && color === 'black')) {
-                    if (board[r + 2 * dir] && !board[r + 2 * dir][c]) add(r + 2 * dir, c);
+                    if (!board[r + 2 * dir]?.[c]) add(r + 2 * dir, c);
                 }
             }
             [-1, 1].forEach(dc => {
-                const target = board[r + dir] ? board[r + dir][c + dc] : null;
+                const target = board[r + dir]?.[c + dc];
                 if (target && PIECES[target].color !== color) add(r + dir, c + dc);
                 if (enPassantTarget && r + dir === enPassantTarget.row && c + dc === enPassantTarget.col) add(r + dir, c + dc, { enPassant: true });
             });
@@ -370,8 +366,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (pieceName.includes('king')) {
             [[-1,-1], [-1,0], [-1,1], [0,-1], [0,1], [1,-1], [1,0], [1,1]].forEach(([dr, dc]) => add(r + dr, c + dc));
             const cr = castlingRights[color[0]];
-            if (cr && cr.k && !board[r][c+1] && !board[r][c+2] && !isSquareAttacked(r, c, color, board) && !isSquareAttacked(r, c+1, color, board) && !isSquareAttacked(r, c+2, color, board)) add(r, c+2, { castling: true });
-            if (cr && cr.q && !board[r][c-1] && !board[r][c-2] && !board[r][c-3] && !isSquareAttacked(r, c, color, board) && !isSquareAttacked(r, c-1, color, board) && !isSquareAttacked(r, c-2, color, board)) add(r, c-2, { castling: true });
+            if (cr.k && !board[r][c+1] && !board[r][c+2] && !isSquareAttacked(r, c, color, board) && !isSquareAttacked(r, c+1, color, board) && !isSquareAttacked(r, c+2, color, board)) add(r, c+2, { castling: true });
+            if (cr.q && !board[r][c-1] && !board[r][c-2] && !board[r][c-3] && !isSquareAttacked(r, c, color, board) && !isSquareAttacked(r, c-1, color, board) && !isSquareAttacked(r, c-2, color, board)) add(r, c-2, { castling: true });
         } else {
             const dirs = [];
             if (pieceName.includes('rook') || pieceName.includes('queen')) dirs.push([-1,0], [1,0], [0,-1], [0,1]);
@@ -412,19 +408,20 @@ document.addEventListener('DOMContentLoaded', () => {
     function handlePawnPromotion(row, col) {
         promotionModal.classList.remove('hidden');
         const color = isWhiteTurn ? 'white' : 'black';
-        
         promotionModal.querySelectorAll('.promotion-choice').forEach(choice => {
-            const newChoice = choice.cloneNode(true);
-            choice.parentNode.replaceChild(newChoice, choice);
-
-            const pieceType = newChoice.dataset.piece;
-            newChoice.innerHTML = PIECES[`${color}_${pieceType}`].svg;
-
-            newChoice.addEventListener('click', () => {
+            const pieceType = choice.dataset.piece;
+            // ✅ ALTERAÇÃO AQUI: Mostra as peças SVG no modal de promoção
+            choice.innerHTML = PIECES[`${color}_${pieceType}`].svg;
+            const handler = () => {
                 boardState[row][col] = `${color}_${pieceType}`;
                 promotionModal.classList.add('hidden');
                 finalizeTurn();
-            }, { once: true });
+                // Limpa os event listeners para evitar bugs
+                const newModal = promotionModal.cloneNode(true);
+                promotionModal.parentNode.replaceChild(newModal, promotionModal);
+                promotionModal = newModal;
+            };
+            choice.addEventListener('click', handler, { once: true });
         });
     }
     
@@ -440,8 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const legalMoves = getAllLegalMoves(isWhiteTurn ? 'white' : 'black');
         legalMoves.forEach(move => {
             if (move.startRow === startRow && move.startCol === startCol) {
-                const el = getSquareElement(move.endRow, move.endCol);
-                if (el) el.classList.add('valid-move');
+                getSquareElement(move.endRow, move.endCol).classList.add('valid-move');
             }
         });
     }
@@ -452,7 +448,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initializeGame();
     resetButton.addEventListener('click', initializeGame);
+
+    // Ajuste para lógica de `getPseudoLegalMoves` que faltava
+    const originalGetPseudoLegalMoves = getPseudoLegalMoves;
+    getPseudoLegalMoves = (r, c, board = boardState) => {
+        const tempBoardState = window.boardState;
+        window.boardState = board;
+        const moves = originalGetPseudoLegalMoves(r, c);
+        window.boardState = tempBoardState;
+        return moves;
+    };
 });
-</script>
-</body>
-</html>
