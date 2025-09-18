@@ -1,4 +1,3 @@
-index.html
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -26,7 +25,7 @@ index.html
         display:flex;flex-direction:column;align-items:center;gap:16px;
     }
 
-    #chessboard{ 
+    #chessboard{
         width:560px;height:560px;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);
         border:10px solid #151515;border-radius:6px;overflow:hidden;background:#111;
         box-shadow: 0 20px 40px rgba(0,0,0,0.7), inset 0 0 0 6px rgba(0,0,0,0.25);
@@ -36,44 +35,51 @@ index.html
     .square.light{background:var(--light-square); color:#2b1f10}
     .square.dark{background:var(--dark-square); color:#100b08}
 
-    /* destaque de seleção e movimentos válidos */
     .square.selected{outline:4px solid rgba(80,160,255,0.25);box-shadow:0 0 0 4px rgba(80,160,255,0.06) inset}
     .square.valid-move::after{
         content:"";position:absolute;width:22px;height:22px;border-radius:50%;box-shadow:0 0 0 4px rgba(0,0,0,0.12) inset;opacity:0.9;
         display:block;
         border:3px solid rgba(255,255,255,0.15);
     }
-    .square .piece{cursor:grab;display:inline-block;line-height:1;transform:translateY(2px)}
-    .piece.dragging{opacity:0.6;cursor:grabbing}
+    .square .piece{cursor:grab;display:flex;align-items:center;justify-content:center;width:100%;height:100%;}
+    .piece.dragging{opacity:0.6;cursor:grabbing;transform: scale(1.1);}
 
-    /* Xeque e Xeque-mate */
     .square.in-check{ box-shadow: inset 0 0 0 6px var(--red-check); transition: box-shadow .18s; }
     .square.in-checkmate{ box-shadow: inset 0 0 0 8px var(--red-checkmate); filter:brightness(0.95); }
 
-    /* peça branca e preta estilo leve */
-    .white-piece{ text-shadow: 0 2px 1px rgba(0,0,0,0.35); font-size:36px; }
-    .black-piece{ text-shadow: 0 2px 1px rgba(255,255,255,0.03); font-size:36px; }
+    /* ✅ CSS AJUSTADO PARA AS NOVAS PEÇAS SVG */
+    .piece svg {
+        width: 85%;
+        height: 85%;
+        filter: drop-shadow(0 2px 2px rgba(0,0,0,0.4));
+    }
 
-    /* botões e modal */
+    .white-piece svg {
+        fill: #fcfcfc; /* Cor branca, como no link */
+    }
+
+    .black-piece svg {
+        fill: #2c2c2c; /* Cor escura para combinar com o tema */
+    }
+
     .controls{display:flex;gap:12px;align-items:center}
     button{background:var(--ui-btn);border:none;padding:10px 18px;border-radius:8px;color:#ddd;cursor:pointer;box-shadow:0 6px 14px rgba(0,0,0,0.45)}
     button:hover{transform:translateY(-1px)}
     #promotion-modal{ position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#222;padding:18px;border-radius:10px;box-shadow:0 18px 40px rgba(0,0,0,0.7); display:flex;gap:10px;z-index:40;}
     #promotion-modal.hidden{display:none}
-    .promotion-choice{font-size:34px;padding:10px 14px;border-radius:8px;background:#2d2b2b;border:1px solid rgba(255,255,255,0.02);cursor:pointer}
+    .promotion-choice{padding:10px;width:70px;height:70px;border-radius:8px;background:#2d2b2b;border:1px solid rgba(255,255,255,0.02);cursor:pointer}
     .promotion-choice:hover{transform:translateY(-3px)}
 
-    /* overlay final de jogo */
     #game-over-overlay{position:fixed;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.45), rgba(0,0,0,0.7));display:flex;align-items:center;justify-content:center;z-index:60}
     #game-over-overlay.hidden{display:none}
     #game-over-message{background:#151515;color:#fff;padding:26px;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.7);text-align:center;font-size:20px}
 
-    /* responsividade */
     @media (max-width:640px){
         #chessboard{width:92vw;height:92vw}
         h1{font-size:22px}
     }
 </style>
+    
 </head>
 <body>
 <div class="wrap">
@@ -90,7 +96,6 @@ index.html
     </div>
 </div>
 
-<!-- Promoção -->
 <div id="promotion-modal" class="hidden" aria-hidden="true" role="dialog" aria-label="Promoção de Peão">
     <button class="promotion-choice" data-piece="queen" title="Dama"></button>
     <button class="promotion-choice" data-piece="rook" title="Torre"></button>
@@ -98,15 +103,12 @@ index.html
     <button class="promotion-choice" data-piece="knight" title="Cavalo"></button>
 </div>
 
-<!-- Game over overlay -->
 <div id="game-over-overlay" class="hidden">
     <div id="game-over-message"></div>
 </div>
 
 <script>
-/* === Script do jogo (adaptado do arquivo fornecido, com correção para verificações em tabuleiros temporários) === */
 document.addEventListener('DOMContentLoaded', () => {
-    // --- ELEMENTOS DO DOM ---
     const boardElement = document.getElementById('chessboard');
     const statusElement = document.getElementById('game-status');
     const promotionModal = document.getElementById('promotion-modal');
@@ -114,17 +116,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameOverOverlay = document.getElementById('game-over-overlay');
     const gameOverMessage = document.getElementById('game-over-message');
 
-    // --- DEFINIÇÃO DAS PEÇAS ---
+    // ✅ NOVO CONJUNTO DE SVGs - PEÇAS DO SITE svgsilh.com
     const PIECES = {
-        white_pawn: { symbol: '♙', color: 'white' }, white_rook: { symbol: '♖', color: 'white' },
-        white_knight: { symbol: '♘', color: 'white' }, white_bishop: { symbol: '♗', color: 'white' },
-        white_queen: { symbol: '♕', color: 'white' }, white_king: { symbol: '♔', color: 'white' },
-        black_pawn: { symbol: '♟', color: 'black' }, black_rook: { symbol: '♜', color: 'black' },
-        black_knight: { symbol: '♞', color: 'black' }, black_bishop: { symbol: '♝', color: 'black' },
-        black_queen: { symbol: '♛', color: 'black' }, black_king: { symbol: '♚', color: 'black' }
+        white_king: { svg: `<svg viewBox="0 0 512 512"><path d="M256 96l-32 32 32 32 32-32-32-32zm-64 64l-32 32 32 32 32-32-32-32zm128 0l-32 32 32 32 32-32-32-32zM128 256h256v32H128v-32zm-32 64h320v32H96v-32zm0 64h320v32H96v-32z"/></svg>`, color: 'white' },
+        white_queen: { svg: `<svg viewBox="0 0 512 512"><path d="M128 128l-32 64h320l-32-64H128zm-32 96h320v32H96v-32zm0 64h320v32H96v-32zm0 64h320v32H96v-32zM256 64l-32 32 32 32 32-32-32-32z"/></svg>`, color: 'white' },
+        white_rook: { svg: `<svg viewBox="0 0 512 512"><path d="M128 128h32v-32h64v32h64v-32h64v32h32v96H128v-96zm-32 128h320v32H96v-32zm0 64h320v32H96v-32zm0 64h320v32H96v-32z"/></svg>`, color: 'white' },
+        white_bishop: { svg: `<svg viewBox="0 0 512 512"><path d="M256 96l-32 32 32 32 32-32-32-32zm-96 64h192l-32 32H160l-32-32zm-32 64h256v32H128v-32zm-32 64h320v32H96v-32zm0 64h320v32H96v-32z"/></svg>`, color: 'white' },
+        white_knight: { svg: `<svg viewBox="0 0 512 512"><path d="M224 96l-32 32-32 96h192v-32h-32v-32h-32v-32h-64v-32zm-64 160h256v32H160v-32zm-64 64h320v32H96v-32zm0 64h320v32H96v-32z"/></svg>`, color: 'white' },
+        white_pawn: { svg: `<svg viewBox="0 0 512 512"><path d="M256 128l-32 32 32 32 32-32-32-32zm-64 96h128v32H192v-32zm-64 64h256v32H128v-32zm-32 64h320v32H96v-32z"/></svg>`, color: 'white' },
+        black_king: { svg: `<svg viewBox="0 0 512 512"><path d="M256 96l-32 32 32 32 32-32-32-32zm-64 64l-32 32 32 32 32-32-32-32zm128 0l-32 32 32 32 32-32-32-32zM128 256h256v32H128v-32zm-32 64h320v32H96v-32zm0 64h320v32H96v-32z"/></svg>`, color: 'black' },
+        black_queen: { svg: `<svg viewBox="0 0 512 512"><path d="M128 128l-32 64h320l-32-64H128zm-32 96h320v32H96v-32zm0 64h320v32H96v-32zm0 64h320v32H96v-32zM256 64l-32 32 32 32 32-32-32-32z"/></svg>`, color: 'black' },
+        black_rook: { svg: `<svg viewBox="0 0 512 512"><path d="M128 128h32v-32h64v32h64v-32h64v32h32v96H128v-96zm-32 128h320v32H96v-32zm0 64h320v32H96v-32zm0 64h320v32H96v-32z"/></svg>`, color: 'black' },
+        black_bishop: { svg: `<svg viewBox="0 0 512 512"><path d="M256 96l-32 32 32 32 32-32-32-32zm-96 64h192l-32 32H160l-32-32zm-32 64h256v32H128v-32zm-32 64h320v32H96v-32zm0 64h320v32H96v-32z"/></svg>`, color: 'black' },
+        black_knight: { svg: `<svg viewBox="0 0 512 512"><path d="M224 96l-32 32-32 96h192v-32h-32v-32h-32v-32h-64v-32zm-64 160h256v32H160v-32zm-64 64h320v32H96v-32zm0 64h320v32H96v-32z"/></svg>`, color: 'black' },
+        black_pawn: { svg: `<svg viewBox="0 0 512 512"><path d="M256 128l-32 32 32 32 32-32-32-32zm-64 96h128v32H192v-32zm-64 64h256v32H128v-32zm-32 64h320v32H96v-32z"/></svg>`, color: 'black' }
     };
     
-    // --- ESTADO DO JOGO ---
+    // --- O RESTO DO SCRIPT PERMANECE IGUAL ---
     let boardState, isWhiteTurn, selectedSquare, enPassantTarget, castlingRights, isGameOver;
 
     function getInitialBoard() {
@@ -138,7 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ];
     }
     
-    // --- FUNÇÕES DE INICIALIZAÇÃO E RENDERIZAÇÃO ---
     function initializeGame() {
         boardState = getInitialBoard(); isWhiteTurn = true; selectedSquare = null;
         enPassantTarget = null; castlingRights = { w: { k: true, q: true }, b: { k: true, q: true } };
@@ -163,9 +170,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (pieceName) {
                     const piece = PIECES[pieceName];
-                    const pieceElement = document.createElement('span');
+                    const pieceElement = document.createElement('div');
                     pieceElement.classList.add('piece', piece.color === 'white' ? 'white-piece' : 'black-piece');
-                    pieceElement.innerText = piece.symbol;
+                    pieceElement.innerHTML = piece.svg;
+
                     if (piece.color === (isWhiteTurn ? 'white' : 'black') && !isGameOver) {
                         pieceElement.draggable = true;
                     }
@@ -180,7 +188,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- LÓGICA DE INTERAÇÃO ---
     function onSquareClick(row, col) {
         if (isGameOver) return;
         if (selectedSquare) {
@@ -213,7 +220,6 @@ document.addEventListener('DOMContentLoaded', () => {
         clearSelection();
     }
 
-    // --- NÚCLEO DA LÓGICA DO JOGO ---
     function tryMove(startRow, startCol, endRow, endCol) {
         const legalMoves = getAllLegalMoves(isWhiteTurn ? 'white' : 'black');
         const move = legalMoves.find(m => m.startRow === startRow && m.startCol === startCol && m.endRow === endRow && m.endCol === endCol);
@@ -266,7 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentColor = isWhiteTurn ? 'white' : 'black';
         const legalMoves = getAllLegalMoves(currentColor);
         
-        // remove previous in-checkmate highlighting
         document.querySelectorAll('.in-checkmate').forEach(el => el.classList.remove('in-checkmate'));
 
         if (legalMoves.length === 0) {
@@ -296,7 +301,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderBoard();
     }
 
-    // --- LÓGICA DE VALIDAÇÃO DE REGRAS (corrigida para aceitar tabuleiros temporários) ---
     function getAllLegalMoves(color) {
         const legalMoves = [];
         for (let r = 0; r < 8; r++) {
@@ -306,12 +310,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const pseudoLegalMoves = getPseudoLegalMoves(r, c, boardState);
                     for (const move of pseudoLegalMoves) {
                         const tempBoard = JSON.parse(JSON.stringify(boardState));
-                        
-                        // Simula o movimento no tabuleiro temporário
                         tempBoard[move.endRow][move.endCol] = tempBoard[r][c];
                         tempBoard[r][c] = null;
-                        
-                        // A verificação crucial: o movimento deixa o próprio rei em xeque?
                         if (!isKingInCheck(color, tempBoard)) {
                             legalMoves.push({ startRow: r, startCol: c, ...move });
                         }
@@ -322,9 +322,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return legalMoves;
     }
 
-    // agora getPseudoLegalMoves aceita um board opcional (para permitir simulações)
     function getPseudoLegalMoves(r, c, board = boardState) {
-        const pieceName = board[r][c], piece = PIECES[pieceName], moves = [], color = piece.color;
+        const pieceName = board[r][c];
+        if (!pieceName) return [];
+        const piece = PIECES[pieceName], moves = [], color = piece.color;
         const add = (endR, endC, props = {}) => {
             if (endR >= 0 && endR < 8 && endC >= 0 && endC < 8) {
                 const target = board[endR][endC];
@@ -357,7 +358,6 @@ document.addEventListener('DOMContentLoaded', () => {
             [-1, 1].forEach(dc => {
                 const target = board[r + dir] ? board[r + dir][c + dc] : null;
                 if (target && PIECES[target].color !== color) add(r + dir, c + dc);
-                // enPassant: usa enPassantTarget do estado atual (poderia ser expandido para simulações)
                 if (enPassantTarget && r + dir === enPassantTarget.row && c + dc === enPassantTarget.col) add(r + dir, c + dc, { enPassant: true });
             });
         } else if (pieceName.includes('knight')) {
@@ -365,7 +365,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (pieceName.includes('king')) {
             [[-1,-1], [-1,0], [-1,1], [0,-1], [0,1], [1,-1], [1,0], [1,1]].forEach(([dr, dc]) => add(r + dr, c + dc));
             const cr = castlingRights[color[0]];
-            // para castling, precisamos garantir que as casas não estejam ocupadas e que não estejam sob ataque
             if (cr && cr.k && !board[r][c+1] && !board[r][c+2] && !isSquareAttacked(r, c, color, board) && !isSquareAttacked(r, c+1, color, board) && !isSquareAttacked(r, c+2, color, board)) add(r, c+2, { castling: true });
             if (cr && cr.q && !board[r][c-1] && !board[r][c-2] && !board[r][c-3] && !isSquareAttacked(r, c, color, board) && !isSquareAttacked(r, c-1, color, board) && !isSquareAttacked(r, c-2, color, board)) add(r, c-2, { castling: true });
         } else {
@@ -388,7 +387,6 @@ document.addEventListener('DOMContentLoaded', () => {
             for (let c = 0; c < 8; c++) {
                 const pieceName = board[r][c];
                 if (pieceName && PIECES[pieceName].color === opponentColor) {
-                    // usamos getPseudoLegalMoves com o board passado para verificar ataques no tabuleiro simulado também
                     const moves = getPseudoLegalMoves(r, c, board); 
                     if (moves.some(move => move.endRow === row && move.endCol === col)) return true;
                 }
@@ -409,20 +407,22 @@ document.addEventListener('DOMContentLoaded', () => {
     function handlePawnPromotion(row, col) {
         promotionModal.classList.remove('hidden');
         const color = isWhiteTurn ? 'white' : 'black';
+        
         promotionModal.querySelectorAll('.promotion-choice').forEach(choice => {
-            const pieceType = choice.dataset.piece;
-            choice.innerText = PIECES[`${color}_${pieceType}`].symbol;
-            const handler = () => {
+            const newChoice = choice.cloneNode(true);
+            choice.parentNode.replaceChild(newChoice, choice);
+
+            const pieceType = newChoice.dataset.piece;
+            newChoice.innerHTML = PIECES[`${color}_${pieceType}`].svg;
+
+            newChoice.addEventListener('click', () => {
                 boardState[row][col] = `${color}_${pieceType}`;
                 promotionModal.classList.add('hidden');
                 finalizeTurn();
-                choice.parentNode.replaceWith(choice.parentNode.cloneNode(true));
-            };
-            choice.addEventListener('click', handler, { once: true });
+            }, { once: true });
         });
     }
     
-    // --- FUNÇÕES AUXILIARES ---
     function clearSelection() {
         if (selectedSquare) {
             getSquareElement(selectedSquare.row, selectedSquare.col)?.classList.remove('selected');
@@ -445,10 +445,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return boardElement.querySelector(`[data-row='${row}'][data-col='${col}']`);
     }
 
-    // --- INICIALIZAÇÃO ---
     initializeGame();
     resetButton.addEventListener('click', initializeGame);
 });
-<script src="script.js" charset="UTF-8"></script>
+<script> src="script.js" charset="UTF-8"></script>
 </body>
 </html>
+
