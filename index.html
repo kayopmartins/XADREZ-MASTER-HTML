@@ -1,4 +1,3 @@
-index.html
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -26,7 +25,7 @@ index.html
         display:flex;flex-direction:column;align-items:center;gap:16px;
     }
 
-    #chessboard{ 
+    #chessboard{
         width:560px;height:560px;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);
         border:10px solid #151515;border-radius:6px;overflow:hidden;background:#111;
         box-shadow: 0 20px 40px rgba(0,0,0,0.7), inset 0 0 0 6px rgba(0,0,0,0.25);
@@ -43,24 +42,36 @@ index.html
         display:block;
         border:3px solid rgba(255,255,255,0.15);
     }
-    .square .piece{cursor:grab;display:inline-block;line-height:1;transform:translateY(2px)}
+    .square .piece{cursor:grab;display:flex;align-items:center;justify-content:center;width:100%;height:100%;}
     .piece.dragging{opacity:0.6;cursor:grabbing}
 
     /* Xeque e Xeque-mate */
     .square.in-check{ box-shadow: inset 0 0 0 6px var(--red-check); transition: box-shadow .18s; }
     .square.in-checkmate{ box-shadow: inset 0 0 0 8px var(--red-checkmate); filter:brightness(0.95); }
 
-    /* peça branca e preta estilo leve */
-    /* peça branca e preta estilo leve */
-    /* Peças brancas */
-.white-piece svg { 
-    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.4));
-}
+    /* ✅ NOVA REGRA PARA ESTILIZAR OS SVGs */
+    .piece svg {
+        width: 85%;
+        height: 85%;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
 
-/* Peças pretas */
-.black-piece svg { 
-    filter: drop-shadow(0 1px 1px rgba(255,255,255,0.1));
-}
+    /* Peças brancas */
+    .white-piece svg {
+        stroke: #000;
+        stroke-width: 1.5;
+        fill: #fff;
+        filter: drop-shadow(0 3px 2px rgba(0,0,0,0.5));
+    }
+
+    /* Peças pretas */
+    .black-piece svg {
+        stroke: #fff;
+        stroke-width: 1.5;
+        fill: #222;
+        filter: drop-shadow(0 3px 2px rgba(0,0,0,0.5));
+    }
 
     /* botões e modal */
     .controls{display:flex;gap:12px;align-items:center}
@@ -68,7 +79,7 @@ index.html
     button:hover{transform:translateY(-1px)}
     #promotion-modal{ position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#222;padding:18px;border-radius:10px;box-shadow:0 18px 40px rgba(0,0,0,0.7); display:flex;gap:10px;z-index:40;}
     #promotion-modal.hidden{display:none}
-    .promotion-choice{font-size:34px;padding:10px 14px;border-radius:8px;background:#2d2b2b;border:1px solid rgba(255,255,255,0.02);cursor:pointer}
+    .promotion-choice{padding:10px;width:70px;height:70px;border-radius:8px;background:#2d2b2b;border:1px solid rgba(255,255,255,0.02);cursor:pointer}
     .promotion-choice:hover{transform:translateY(-3px)}
 
     /* overlay final de jogo */
@@ -82,7 +93,7 @@ index.html
         h1{font-size:22px}
     }
 </style>
-   
+    
 </head>
 <body>
 <div class="wrap">
@@ -99,7 +110,6 @@ index.html
     </div>
 </div>
 
-<!-- Promoção -->
 <div id="promotion-modal" class="hidden" aria-hidden="true" role="dialog" aria-label="Promoção de Peão">
     <button class="promotion-choice" data-piece="queen" title="Dama"></button>
     <button class="promotion-choice" data-piece="rook" title="Torre"></button>
@@ -107,13 +117,11 @@ index.html
     <button class="promotion-choice" data-piece="knight" title="Cavalo"></button>
 </div>
 
-<!-- Game over overlay -->
 <div id="game-over-overlay" class="hidden">
     <div id="game-over-message"></div>
 </div>
 
 <script>
-/* === Script do jogo (adaptado do arquivo fornecido, com correção para verificações em tabuleiros temporários) === */
 document.addEventListener('DOMContentLoaded', () => {
     // --- ELEMENTOS DO DOM ---
     const boardElement = document.getElementById('chessboard');
@@ -124,29 +132,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameOverMessage = document.getElementById('game-over-message');
 
     // --- DEFINIÇÃO DAS PEÇAS ---
-    // SVGs estilizados
-const SVGs = {
-  white_pawn: `<svg viewBox="0 0 45 45"><circle cx="22" cy="15" r="6" fill="#fff" stroke="#000"/><rect x="18" y="22" width="9" height="15" fill="#fff" stroke="#000"/></svg>`,
-  white_rook: `<svg viewBox="0 0 45 45"><rect x="12" y="15" width="21" height="20" fill="#fff" stroke="#000"/></svg>`,
-  white_knight: `<svg viewBox="0 0 45 45"><path d="M15 30 L30 15 L35 25 L25 35 Z" fill="#fff" stroke="#000"/></svg>`,
-  white_bishop: `<svg viewBox="0 0 45 45"><circle cx="22" cy="15" r="6" fill="#fff" stroke="#000"/><rect x="18" y="22" width="9" height="15" fill="#fff" stroke="#000"/></svg>`,
-  white_queen: `<svg viewBox="0 0 45 45"><circle cx="12" cy="12" r="4" fill="#fff" stroke="#000"/><circle cx="22" cy="10" r="4" fill="#fff" stroke="#000"/><circle cx="32" cy="12" r="4" fill="#fff" stroke="#000"/><rect x="15" y="18" width="14" height="18" fill="#fff" stroke="#000"/></svg>`,
-  white_king: `<svg viewBox="0 0 45 45"><rect x="19" y="10" width="6" height="20" fill="#fff" stroke="#000"/><rect x="15" y="30" width="14" height="6" fill="#fff" stroke="#000"/></svg>`,
-  black_pawn: `<svg viewBox="0 0 45 45"><circle cx="22" cy="15" r="6" fill="#000" stroke="#fff"/><rect x="18" y="22" width="9" height="15" fill="#000" stroke="#fff"/></svg>`,
-  black_rook: `<svg viewBox="0 0 45 45"><rect x="12" y="15" width="21" height="20" fill="#000" stroke="#fff"/></svg>`,
-  black_knight: `<svg viewBox="0 0 45 45"><path d="M15 30 L30 15 L35 25 L25 35 Z" fill="#000" stroke="#fff"/></svg>`,
-  black_bishop: `<svg viewBox="0 0 45 45"><circle cx="22" cy="15" r="6" fill="#000" stroke="#fff"/><rect x="18" y="22" width="9" height="15" fill="#000" stroke="#fff"/></svg>`,
-  black_queen: `<svg viewBox="0 0 45 45"><circle cx="12" cy="12" r="4" fill="#000" stroke="#fff"/><circle cx="22" cy="10" r="4" fill="#000" stroke="#fff"/><circle cx="32" cy="12" r="4" fill="#000" stroke="#fff"/><rect x="15" y="18" width="14" height="18" fill="#000" stroke="#fff"/></svg>`,
-  black_king: `<svg viewBox="0 0 45 45"><rect x="19" y="10" width="6" height="20" fill="#000" stroke="#fff"/><rect x="15" y="30" width="14" height="6" fill="#000" stroke="#fff"/></svg>`
-};
+    // ✅ NOVO CONJUNTO DE SVGs ESTILIZADOS
+    const SVGs = {
+        white_pawn: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g><path d="M22.5,11.63c-2.21,0-4,1.79-4,4s1.79,4,4,4,4-1.79,4-4-1.79-4-4-4Zm0,5c-0.55,0-1-0.45-1-1s0.45-1,1-1,1,0.45,1,1-0.45,1-1,1Z" /><path d="M22.5,20.63c-3.31,0-6,2.69-6,6v2h12v-2c0-3.31-2.69-6-6-6Zm2,3h-4v-1h4v1Z" /><path d="M20.5,31.63h4v2h-4v-2Z" /><path d="M19.5,29.63h6v1h-6v-1Z" /></g></svg>`,
+        white_rook: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g><path d="M18.5,13.63v-3h2v3h1v-3h2v3h1v-3h2v3h-8Z" /><path d="M17.5,15.63h10v2h-10v-2Z" /><path d="M16.5,18.63h12v12h-12v-12Zm2,2v8h8v-8h-8Z" /><path d="M15.5,31.63h14v2h-14v-2Z" /></g></svg>`,
+        white_knight: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g><path d="M23.5,10.63c0,0-2-2-4-2s-4,2-4,4,2,4,4,4,4-2,4-4-2-2-4-2Zm-1,2c0.55,0,1,0.45,1,1s-0.45,1-1,1-1-0.45-1-1,0.45-1,1-1Z" /><path d="M22.5,23.63c0,0-1,1-2,1s-2-1-2-2,1-2,2-2,2,1,2,2Z" /><path d="M22.5,15.63c0,0-2,0-2,2s0,2,2,2h4v-4h-4Z" /><path d="M15.5,31.63h14v2h-14v-2Z" /><path d="M16.5,28.63h12v2h-12v-2Z" /><path d="M18.5,15.63v12h-2v-12h2Z" /></g></svg>`,
+        white_bishop: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g><path d="M22.5,11.63c-2.21,0-4,1.79-4,4s1.79,4,4,4,4-1.79,4-4-1.79-4-4-4Zm0,5c-0.55,0-1-0.45-1-1s0.45-1,1-1,1,0.45,1,1-0.45,1-1,1Z" /><path d="M22.5,19.63l-4,4h8l-4-4Z" /><path d="M15.5,31.63h14v2h-14v-2Z" /><path d="M17.5,24.63h10v5h-10v-5Z" /></g></svg>`,
+        white_queen: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g><path d="M13.5,13.63c-1.1,0-2,0.9-2,2s0.9,2,2,2,2-0.9,2-2-0.9-2-2-2Z" /><path d="M22.5,10.63c-1.1,0-2,0.9-2,2s0.9,2,2,2,2-0.9,2-2-0.9-2-2-2Z" /><path d="M31.5,13.63c-1.1,0-2,0.9-2,2s0.9,2,2,2,2-0.9,2-2-0.9-2-2-2Z" /><path d="M12.5,18.63h20l-2,10h-16l-2-10Z" /><path d="M15.5,31.63h14v2h-14v-2Z" /><path d="M17.5,29.63h10v1h-10v-1Z" /></g></svg>`,
+        white_king: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g><path d="M22.5,13.63c-2.21,0-4,1.79-4,4s1.79,4,4,4,4-1.79,4-4-1.79-4-4-4Zm0,6c-1.1,0-2-0.9-2-2s0.9-2,2-2,2,0.9,2,2-0.9,2-2,2Z" /><path d="M21.5,11.63h2v-2h-2v2Z" /><path d="M21.5,10.63v-2h-2v2h2Z" /><path d="M24.5,10.63v-2h2v2h-2Z" /><path d="M15.5,31.63h14v2h-14v-2Z" /><path d="M17.5,22.63h10v8h-10v-8Z" /></g></svg>`,
+        black_pawn: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g><path d="M22.5,11.63c-2.21,0-4,1.79-4,4s1.79,4,4,4,4-1.79,4-4-1.79-4-4-4Zm0,5c-0.55,0-1-0.45-1-1s0.45-1,1-1,1,0.45,1,1-0.45,1-1,1Z" /><path d="M22.5,20.63c-3.31,0-6,2.69-6,6v2h12v-2c0-3.31-2.69-6-6-6Zm2,3h-4v-1h4v1Z" /><path d="M20.5,31.63h4v2h-4v-2Z" /><path d="M19.5,29.63h6v1h-6v-1Z" /></g></svg>`,
+        black_rook: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g><path d="M18.5,13.63v-3h2v3h1v-3h2v3h1v-3h2v3h-8Z" /><path d="M17.5,15.63h10v2h-10v-2Z" /><path d="M16.5,18.63h12v12h-12v-12Zm2,2v8h8v-8h-8Z" /><path d="M15.5,31.63h14v2h-14v-2Z" /></g></svg>`,
+        black_knight: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g><path d="M23.5,10.63c0,0-2-2-4-2s-4,2-4,4,2,4,4,4,4-2,4-4-2-2-4-2Zm-1,2c0.55,0,1,0.45,1,1s-0.45,1-1,1-1-0.45-1-1,0.45-1,1-1Z" /><path d="M22.5,23.63c0,0-1,1-2,1s-2-1-2-2,1-2,2-2,2,1,2,2Z" /><path d="M22.5,15.63c0,0-2,0-2,2s0,2,2,2h4v-4h-4Z" /><path d="M15.5,31.63h14v2h-14v-2Z" /><path d="M16.5,28.63h12v2h-12v-2Z" /><path d="M18.5,15.63v12h-2v-12h2Z" /></g></svg>`,
+        black_bishop: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g><path d="M22.5,11.63c-2.21,0-4,1.79-4,4s1.79,4,4,4,4-1.79,4-4-1.79-4-4-4Zm0,5c-0.55,0-1-0.45-1-1s0.45-1,1-1,1,0.45,1,1-0.45,1-1,1Z" /><path d="M22.5,19.63l-4,4h8l-4-4Z" /><path d="M15.5,31.63h14v2h-14v-2Z" /><path d="M17.5,24.63h10v5h-10v-5Z" /></g></svg>`,
+        black_queen: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g><path d="M13.5,13.63c-1.1,0-2,0.9-2,2s0.9,2,2,2,2-0.9,2-2-0.9-2-2-2Z" /><path d="M22.5,10.63c-1.1,0-2,0.9-2,2s0.9,2,2,2,2-0.9,2-2-0.9-2-2-2Z" /><path d="M31.5,13.63c-1.1,0-2,0.9-2,2s0.9,2,2,2,2-0.9,2-2-0.9-2-2-2Z" /><path d="M12.5,18.63h20l-2,10h-16l-2-10Z" /><path d="M15.5,31.63h14v2h-14v-2Z" /><path d="M17.5,29.63h10v1h-10v-1Z" /></g></svg>`,
+        black_king: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g><path d="M22.5,13.63c-2.21,0-4,1.79-4,4s1.79,4,4,4,4-1.79,4-4-1.79-4-4-4Zm0,6c-1.1,0-2-0.9-2-2s0.9-2,2-2,2,0.9,2,2-0.9,2-2,2Z" /><path d="M21.5,11.63h2v-2h-2v2Z" /><path d="M21.5,10.63v-2h-2v2h2Z" /><path d="M24.5,10.63v-2h2v2h-2Z" /><path d="M15.5,31.63h14v2h-14v-2Z" /><path d="M17.5,22.63h10v8h-10v-8Z" /></g></svg>`
+    };
 
-// Criar objeto PIECES com svg + cor
-
-const PIECES = {};
-for (const key in SVGs) {
-  PIECES[key] = { svg: SVGs[key], color: key.startsWith("white") ? "white" : "black" };
-}
-
+    // Criar objeto PIECES com svg + cor
+    const PIECES = {};
+    for (const key in SVGs) {
+      PIECES[key] = { svg: SVGs[key], color: key.startsWith("white") ? "white" : "black" };
+    }
     
     // --- ESTADO DO JOGO ---
     let boardState, isWhiteTurn, selectedSquare, enPassantTarget, castlingRights, isGameOver;
@@ -187,9 +193,9 @@ for (const key in SVGs) {
 
                 if (pieceName) {
                     const piece = PIECES[pieceName];
-                    const pieceElement = document.createElement('span');
+                    const pieceElement = document.createElement('div'); // Usar DIV como container
                     pieceElement.classList.add('piece', piece.color === 'white' ? 'white-piece' : 'black-piece');
-                   pieceElement.innerHTML = piece.svg; // ✅ insere o SVG estilizado
+                    pieceElement.innerHTML = piece.svg; // insere o SVG estilizado
 
                     if (piece.color === (isWhiteTurn ? 'white' : 'black') && !isGameOver) {
                         pieceElement.draggable = true;
@@ -291,7 +297,6 @@ for (const key in SVGs) {
         const currentColor = isWhiteTurn ? 'white' : 'black';
         const legalMoves = getAllLegalMoves(currentColor);
         
-        // remove previous in-checkmate highlighting
         document.querySelectorAll('.in-checkmate').forEach(el => el.classList.remove('in-checkmate'));
 
         if (legalMoves.length === 0) {
@@ -321,7 +326,7 @@ for (const key in SVGs) {
         renderBoard();
     }
 
-    // --- LÓGICA DE VALIDAÇÃO DE REGRAS (corrigida para aceitar tabuleiros temporários) ---
+    // --- LÓGICA DE VALIDAÇÃO DE REGRAS ---
     function getAllLegalMoves(color) {
         const legalMoves = [];
         for (let r = 0; r < 8; r++) {
@@ -331,12 +336,8 @@ for (const key in SVGs) {
                     const pseudoLegalMoves = getPseudoLegalMoves(r, c, boardState);
                     for (const move of pseudoLegalMoves) {
                         const tempBoard = JSON.parse(JSON.stringify(boardState));
-                        
-                        // Simula o movimento no tabuleiro temporário
                         tempBoard[move.endRow][move.endCol] = tempBoard[r][c];
                         tempBoard[r][c] = null;
-                        
-                        // A verificação crucial: o movimento deixa o próprio rei em xeque?
                         if (!isKingInCheck(color, tempBoard)) {
                             legalMoves.push({ startRow: r, startCol: c, ...move });
                         }
@@ -347,7 +348,6 @@ for (const key in SVGs) {
         return legalMoves;
     }
 
-    // agora getPseudoLegalMoves aceita um board opcional (para permitir simulações)
     function getPseudoLegalMoves(r, c, board = boardState) {
         const pieceName = board[r][c], piece = PIECES[pieceName], moves = [], color = piece.color;
         const add = (endR, endC, props = {}) => {
@@ -382,7 +382,6 @@ for (const key in SVGs) {
             [-1, 1].forEach(dc => {
                 const target = board[r + dir] ? board[r + dir][c + dc] : null;
                 if (target && PIECES[target].color !== color) add(r + dir, c + dc);
-                // enPassant: usa enPassantTarget do estado atual (poderia ser expandido para simulações)
                 if (enPassantTarget && r + dir === enPassantTarget.row && c + dc === enPassantTarget.col) add(r + dir, c + dc, { enPassant: true });
             });
         } else if (pieceName.includes('knight')) {
@@ -390,7 +389,6 @@ for (const key in SVGs) {
         } else if (pieceName.includes('king')) {
             [[-1,-1], [-1,0], [-1,1], [0,-1], [0,1], [1,-1], [1,0], [1,1]].forEach(([dr, dc]) => add(r + dr, c + dc));
             const cr = castlingRights[color[0]];
-            // para castling, precisamos garantir que as casas não estejam ocupadas e que não estejam sob ataque
             if (cr && cr.k && !board[r][c+1] && !board[r][c+2] && !isSquareAttacked(r, c, color, board) && !isSquareAttacked(r, c+1, color, board) && !isSquareAttacked(r, c+2, color, board)) add(r, c+2, { castling: true });
             if (cr && cr.q && !board[r][c-1] && !board[r][c-2] && !board[r][c-3] && !isSquareAttacked(r, c, color, board) && !isSquareAttacked(r, c-1, color, board) && !isSquareAttacked(r, c-2, color, board)) add(r, c-2, { castling: true });
         } else {
@@ -413,7 +411,6 @@ for (const key in SVGs) {
             for (let c = 0; c < 8; c++) {
                 const pieceName = board[r][c];
                 if (pieceName && PIECES[pieceName].color === opponentColor) {
-                    // usamos getPseudoLegalMoves com o board passado para verificar ataques no tabuleiro simulado também
                     const moves = getPseudoLegalMoves(r, c, board); 
                     if (moves.some(move => move.endRow === row && move.endCol === col)) return true;
                 }
@@ -433,18 +430,19 @@ for (const key in SVGs) {
 
     function handlePawnPromotion(row, col) {
         promotionModal.classList.remove('hidden');
-        const color = isWhiteTurn ? 'white' : 'black';
+        const color = !isWhiteTurn ? 'white' : 'black';
         promotionModal.querySelectorAll('.promotion-choice').forEach(choice => {
             const pieceType = choice.dataset.piece;
             choice.innerHTML = PIECES[`${color}_${pieceType}`].svg;
 
-            const handler = () => {
+            const newChoice = choice.cloneNode(true);
+            choice.parentNode.replaceChild(newChoice, choice);
+
+            newChoice.addEventListener('click', () => {
                 boardState[row][col] = `${color}_${pieceType}`;
                 promotionModal.classList.add('hidden');
                 finalizeTurn();
-                choice.parentNode.replaceWith(choice.parentNode.cloneNode(true));
-            };
-            choice.addEventListener('click', handler, { once: true });
+            }, { once: true });
         });
     }
     
