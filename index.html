@@ -50,9 +50,18 @@ index.html
     .square.in-check{ box-shadow: inset 0 0 0 6px var(--red-check); transition: box-shadow .18s; }
     .square.in-checkmate{ box-shadow: inset 0 0 0 8px var(--red-checkmate); filter:brightness(0.95); }
 
-    /* peça branca e preta estilo leve */
-    .white-piece{ text-shadow: 0 2px 1px rgba(0,0,0,0.35); font-size:36px; }
-    .black-piece{ text-shadow: 0 2px 1px rgba(255,255,255,0.03); font-size:36px; }
+   
+    /* ✅ ALTERAÇÃO AQUI: Cores explícitas para as peças brancas e pretas */
+    .white-piece{ 
+        color: #FFFFFF; /* Peças de baixo agora são brancas */
+        text-shadow: 0 2px 2px rgba(0,0,0,0.5); 
+        font-size:36px; 
+    }
+    .black-piece{ 
+        color: #000000; /* Peças de cima agora são pretas */
+        text-shadow: 0 1px 1px rgba(255,255,255,0.1); 
+        font-size:36px; 
+    }
 
     /* botões e modal */
     .controls{display:flex;gap:12px;align-items:center}
