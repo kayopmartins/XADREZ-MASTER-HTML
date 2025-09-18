@@ -142,7 +142,8 @@ const SVGs = {
 // Criar objeto PIECES com svg + cor
 const PIECES = {};
 for (const key in SVGs) {
-  PIECES[key] = { svg: SVGs[key], color: key.startsWith("white") ? "white" : "black" };
+  pieceElement.classList.add('piece', piece.color === 'white' ? 'white-piece' : 'black-piece');
+
 }
     
     // --- ESTADO DO JOGO ---
